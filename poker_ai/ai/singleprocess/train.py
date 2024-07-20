@@ -121,6 +121,10 @@ def simple_search(
             )
 
     print_strategy(agent.strategy)
+    # Serialise anyway for testing.
+    ai.serialise(
+        agent=agent, save_path=save_path, t=t, server_state=config,
+    )
 
 
 if __name__ == "__main__":
