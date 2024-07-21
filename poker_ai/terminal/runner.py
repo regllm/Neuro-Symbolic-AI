@@ -48,7 +48,8 @@ def run_terminal_app(
     """
     term = Terminal()
     log = AsciiLogger(term)
-    n_players: int = 6
+    # n_players: int = 6
+    n_players: int = 3
     if debug_quick_start:
         state: ShortDeckPokerState = new_game(n_players, {}, load_card_lut=False)
     else:
@@ -59,8 +60,10 @@ def run_terminal_app(
         )
     n_table_rotations: int = 0
     selected_action_i: int = 0
-    positions = ["top-left", "top-middle", "top-right", "bottom-left", "bottom-middle", "bottom-right",]
-    names = {"top-left": "BOT 1", "top-middle": "BOT 2", "top-right": "BOT 3", "bottom-left": "BOT 4", "bottom-middle": "BOT 5", "bottom-right": "HUMAN"}
+    positions = ["left", "middle", "right"]
+    names = {"left": "BOT 1", "middle": "BOT 2", "right": "HUMAN"}
+    # positions = ["top-left", "top-middle", "top-right", "bottom-left", "bottom-middle", "bottom-right",]
+    # names = {"top-left": "BOT 1", "top-middle": "BOT 2", "top-right": "BOT 3", "bottom-left": "BOT 4", "bottom-middle": "BOT 5", "bottom-right": "HUMAN"}
     if not debug_quick_start and agent in {"offline", "online"}:
         offline_strategy_dict = joblib.load(strategy_path)
         offline_strategy = offline_strategy_dict['strategy']
