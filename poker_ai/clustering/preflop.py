@@ -55,6 +55,7 @@ def compute_preflop_lossless_abstraction(builder) -> Dict[Tuple[Card, Card], int
     """
     # Making sure this is 20 card deck with 2-9 removed
     allowed_ranks = {10, 11, 12, 13, 14}
+    # allowed_ranks = set(list(range(2, 15)))
     found_ranks = set([c.rank_int for c in builder._cards])
     if found_ranks != allowed_ranks:
         raise ValueError(
