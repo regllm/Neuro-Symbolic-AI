@@ -48,8 +48,8 @@ def run_terminal_app(
     """
     term = Terminal()
     log = AsciiLogger(term)
-    # n_players: int = 6
-    n_players: int = 3
+    n_players: int = 6
+    # n_players: int = 3
     if debug_quick_start:
         state: ShortDeckPokerState = new_game(n_players, {}, load_card_lut=False)
     else:
