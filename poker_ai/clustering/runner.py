@@ -56,7 +56,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_river_clusters",
-    default=50,
+    # default=50,
+    default=4,
     help=(
         "The number of card information buckets we would like to create for "
         "the river. We recommend to start small."
@@ -64,7 +65,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_turn_clusters",
-    default=50,
+    # default=50,
+    default=12,
     help=(
         "The number of card information buckets we would like to create for "
         "the turn. We recommend to start small."
