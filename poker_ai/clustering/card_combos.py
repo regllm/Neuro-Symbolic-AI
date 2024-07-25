@@ -95,7 +95,9 @@ class CardCombos:
                 key=operator.attrgetter("eval_card"),
                 reverse=True,
             )
-            for public_combo in publics:
+            # DEBUG
+            # for public_combo in publics:
+            for public_combo in publics[:10]:
                 # Descending sort public_combo.
                 sorted_public_combo: List[Card] = sorted(
                     list(public_combo),
