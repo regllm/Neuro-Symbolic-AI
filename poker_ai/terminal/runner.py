@@ -168,7 +168,7 @@ def run_terminal_app(
                         user_results.add_result(strategy_path, agent, state, og_name_to_name)
                         log.clear()
                         log.info(term.green("new game"))
-                        include_ranks = list(range(low_card_rank, high_card_rank - 1))
+                        include_ranks = list(range(low_card_rank, high_card_rank + 1))
                         if debug_quick_start:
                             state: ShortDeckPokerState = new_game(
                                 n_players, state.card_info_lut, load_card_lut=False, include_ranks=include_ranks,

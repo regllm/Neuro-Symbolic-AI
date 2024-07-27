@@ -262,7 +262,7 @@ def start(
     save_path: Path = utils.io.create_dir(nickname)
     with open(save_path / "config.yaml", "w") as steam:
         yaml.dump(config, steam)
-    include_ranks = list(range(low_card_rank, high_card_rank - 1))
+    include_ranks = list(range(low_card_rank, high_card_rank + 1))
     log.info("Using ranks: " + ", ".join([str(rank) for rank in include_ranks]))
     if single_process:
         log.info(
