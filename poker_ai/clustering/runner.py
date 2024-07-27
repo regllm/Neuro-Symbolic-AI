@@ -40,7 +40,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 @click.command()
 @click.option(
     "--low_card_rank",
-    default=7,
+    # default=7,
+    default=2,
     help=(
         "The starting hand rank from 2 through 14 for the deck we want to "
         "cluster. We recommend starting small."
@@ -48,7 +49,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--high_card_rank",
-    default=11,
+    # default=11,
+    default=14,
     help=(
         "The starting hand rank from 2 through 14 for the deck we want to "
         "cluster. We recommend starting small."
@@ -56,8 +58,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_river_clusters",
-    # default=50,
-    default=3,
+    default=50,
+    # default=3,
     help=(
         "The number of card information buckets we would like to create for "
         "the river. We recommend to start small."
@@ -65,8 +67,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_turn_clusters",
-    # default=50,
-    default=3,
+    default=50,
+    # default=3,
     help=(
         "The number of card information buckets we would like to create for "
         "the turn. We recommend to start small."
@@ -82,8 +84,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_simulations_river",
-    # default=6,
-    default=2,
+    default=6,
+    # default=2,
     help=(
         "The number of opponent hand simulations we would like to run on the "
         "river. We recommend to start small."
@@ -91,8 +93,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_simulations_turn",
-    # default=6,
-    default=2,
+    default=6,
+    # default=2,
     help=(
         "The number of river card hand simulations we would like to run on the "
         "turn. We recommend to start small."
@@ -100,8 +102,8 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 )
 @click.option(
     "--n_simulations_flop",
-    # default=6,
-    default=2,
+    default=6,
+    # default=2,
     help=(
         "The number of turn card hand simulations we would like to run on the "
         "flop. We recommend to start small."
