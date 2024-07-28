@@ -87,12 +87,12 @@ class Card:
     @property
     def rank_int(self) -> int:
         """Get the rank as an int"""
-        return self._card_id % 15
+        return self._card_id % 16
 
     @property
     def rank(self) -> str:
         """Get the rank as a string."""
-        return self._rank_to_str(self._card_id % 15)
+        return self._rank_to_str(self._card_id % 16)
 
     @property
     def suit(self) -> str:
@@ -122,7 +122,7 @@ class Card:
             2: "clubs",
             3: "hearts",
         }
-        rank = card_id % 15
+        rank = card_id % 16
         suit = suit_dict[int(card_id // 15)]
         return rank, suit
 
