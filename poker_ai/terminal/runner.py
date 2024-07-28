@@ -17,12 +17,30 @@ from poker_ai.utils.algos import rotate_list
 
 
 @click.command()
+@click.option(
+    "--low_card_rank",
+    default=2,
+    help=(
+        "The starting hand rank from 2 through 14 for the deck we want to "
+        "cluster. We recommend starting small."
+    )
+)
+@click.option(
+    "--high_card_rank",
+    default=14,
+    help=(
+        "The starting hand rank from 2 through 14 for the deck we want to "
+        "cluster. We recommend starting small."
+    )
+)
 @click.option('--lut_path', required=True, type=str)
 @click.option('--pickle_dir', required=False, default=False, type=bool)
 @click.option('--agent', required=False, default="offline", type=str)
 @click.option('--strategy_path', required=False, default="", type=str)
 @click.option('--debug_quick_start/--no_debug_quick_start', default=False)
 def run_terminal_app(
+    low_card_rank: int,
+    high_card_rank: int,
     lut_path: str,
     pickle_dir: bool,
     agent: str = "offline",
@@ -150,13 +168,14 @@ def run_terminal_app(
                         user_results.add_result(strategy_path, agent, state, og_name_to_name)
                         log.clear()
                         log.info(term.green("new game"))
+                        include_ranks = list(range(low_card_rank, high_card_rank - 1))
                         if debug_quick_start:
                             state: ShortDeckPokerState = new_game(
-                                n_players, state.card_info_lut, load_card_lut=False,
+                                n_players, state.card_info_lut, load_card_lut=False, include_ranks=include_ranks,
                             )
                         else:
                             state: ShortDeckPokerState = new_game(
-                                n_players, state.card_info_lut,
+                                n_players, state.card_info_lut, include_ranks=include_ranks,
                             )
                         n_table_rotations -= 1
                         if n_table_rotations < 0:
