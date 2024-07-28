@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import random
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union, List
 
 import click
 import joblib
@@ -50,6 +50,7 @@ def simple_search(
     n_players: int,
     dump_iteration: int,
     update_threshold: int,
+    include_ranks: List[int],
 ):
     """
     Train agent.

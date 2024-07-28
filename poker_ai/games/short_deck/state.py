@@ -78,6 +78,7 @@ class ShortDeckPokerState:
         lut_path: str = ".",
         pickle_dir: bool = False,
         load_card_lut: bool = True,
+        include_ranks: Optional[List[int]] = None,
     ):
         """Initialise state."""
         n_players = len(players)
@@ -94,8 +95,8 @@ class ShortDeckPokerState:
         # Get a reference of the pot from the first player.
         self._table = PokerTable(
             # players=players, pot=players[0].pot, include_ranks=[10, 11, 12, 13, 14]
-            players=players, pot=players[0].pot
             # players=players, pot=players[0].pot, include_ranks=[7, 8, 9, 10, 11]
+            players=players, pot=players[0].pot, include_ranks=include_ranks,
         )
         # Get a reference of the initial number of chips for the payout.
         self._initial_n_chips = players[0].n_chips
