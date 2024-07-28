@@ -113,7 +113,7 @@ class Card:
             "hearts": 3,
         }
         suit_index = suit_dict[suit]
-        return suit_index * 15 + rank
+        return suit_index * 16 + rank
 
     def _card_id_to_rank_and_suit(self, card_id):
         suit_dict = {
