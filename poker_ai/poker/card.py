@@ -42,7 +42,8 @@ class Card:
             )
         if suit not in get_all_suits():
             raise ValueError(f"suit {suit} must be in {get_all_suits()}")
-        self._card_id = self._rank_and_suit_to_card_id(rank, suit)
+        self._rank = rank
+        self._set_suit(suit)
 
     def __repr__(self):
         """Pretty printing the object."""
@@ -79,52 +80,44 @@ class Card:
 
     @property
     def eval_card(self) -> EvaluationCard:
-        rank, suit = self._card_id_to_rank_and_suit(self._card_id)
-        rank_char = self._rank_to_char(rank)
-        suit_char = self.suit.lower()[0]
+        rank_char = self._rank_to_char(self._rank)
+        suit_char = self._get_suit()[0]
         return EvaluationCard.new(f"{rank_char}{suit_char}")
 
     @property
     def rank_int(self) -> int:
         """Get the rank as an int"""
-        return self._card_id % 16
+        return self._rank
 
     @property
     def rank(self) -> str:
         """Get the rank as a string."""
-        return self._rank_to_str(self._card_id % 16)
+        return self._rank_to_str(self._rank)
 
     @property
     def suit(self) -> str:
         """Get the suit."""
-        suit_dict = {
-            0: "spades",
-            1: "diamonds",
-            2: "clubs",
-            3: "hearts",
-        }
-        return suit_dict[int(self._card_id // 16)]
-
-    def _rank_and_suit_to_card_id(self, rank, suit):
-        suit_dict = {
-            "spades": 0,
-            "diamonds": 1,
-            "clubs": 2,
-            "hearts": 3,
-        }
-        suit_index = suit_dict[suit]
-        return suit_index * 16 + rank
-
-    def _card_id_to_rank_and_suit(self, card_id):
-        suit_dict = {
-            0: "spades",
-            1: "diamonds",
-            2: "clubs",
-            3: "hearts",
-        }
-        rank = card_id % 16
-        suit = suit_dict[int(card_id // 16)]
-        return rank, suit
+        return self._get_suit()
+    
+    def _set_suit(self, suit):
+        if suit[0] == "s":
+            self._suit = 0
+        elif suit[1] == "d":
+            self._suit = 1
+        elif suit[2] == "c":
+            self._suit = 2
+        else:
+            self._suit = 3
+    
+    def _get_suit(self):
+        if self._suit == 0:
+            return "spades"
+        elif self._suit == 1:
+            return "diamonds"
+        elif self._suit == 2:
+            return "clubs"
+        else:
+            return "hearts"
 
     def _str_to_rank(self, string: str) -> int:
         """Convert the string rank to the integer rank."""
