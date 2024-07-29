@@ -103,7 +103,7 @@ class Card:
             2: "clubs",
             3: "hearts",
         }
-        return suit_dict[int(self._card_id // 15)]
+        return suit_dict[int(self._card_id // 16)]
 
     def _rank_and_suit_to_card_id(self, rank, suit):
         suit_dict = {
@@ -123,7 +123,7 @@ class Card:
             3: "hearts",
         }
         rank = card_id % 16
-        suit = suit_dict[int(card_id // 15)]
+        suit = suit_dict[int(card_id // 16)]
         return rank, suit
 
     def _str_to_rank(self, string: str) -> int:
