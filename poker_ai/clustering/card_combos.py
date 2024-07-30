@@ -26,6 +26,7 @@ class CardCombos:
         self._cards = np.array(
             [Card(rank, suit) for suit in suits for rank in ranks]
         )
+        print("CARDS!", self._cards)
         self.starting_hands = self.get_card_combos(2)
         self.flop = self.create_info_combos(
             self.starting_hands, self.get_card_combos(3)

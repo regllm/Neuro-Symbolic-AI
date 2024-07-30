@@ -57,19 +57,19 @@ class Card:
         return self._eval
 
     def __lt__(self, other):
-        return self.rank < other.rank
+        return self._rank < other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __le__(self, other):
-        return self.rank <= other.rank
+        return self._rank <= other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __gt__(self, other):
-        return self.rank > other.rank
+        return self._rank > other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __ge__(self, other):
-        return self.rank >= other.rank
+        return self._rank >= other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __eq__(self, other):
