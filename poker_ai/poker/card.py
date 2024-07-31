@@ -45,7 +45,7 @@ class Card:
         self._rank = rank
         self._set_suit(suit)
         rank_char = self._rank_to_char(rank)
-        suit_char = self.suit[0]
+        suit_char = suit[0].lower()
         self._eval = EvaluationCard.new(f"{rank_char}{suit_char}")
 
     def __repr__(self):
@@ -54,7 +54,7 @@ class Card:
         return f"<Card card=[{self.rank} of {self.suit} {icon}]>"
 
     def __int__(self):
-        return self.eval_card
+        return self._eval
 
     def __lt__(self, other):
         return self.rank < other.rank
