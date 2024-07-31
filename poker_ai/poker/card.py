@@ -103,9 +103,9 @@ class Card:
     def _set_suit(self, suit):
         if suit[0] == "s":
             self._suit = 0
-        elif suit[1] == "d":
+        elif suit[0] == "d":
             self._suit = 1
-        elif suit[2] == "c":
+        elif suit[0] == "c":
             self._suit = 2
         else:
             self._suit = 3
