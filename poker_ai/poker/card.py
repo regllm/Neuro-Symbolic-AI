@@ -43,7 +43,7 @@ class Card:
         if suit not in get_all_suits():
             raise ValueError(f"suit {suit} must be in {get_all_suits()}")
         rank_char = self._rank_to_char(rank)
-        suit_char = self.suit.lower()[0]
+        suit_char = suit[0]
         self._eval_card = EvaluationCard.new(f"{rank_char}{suit_char}")
 
     def __repr__(self):
