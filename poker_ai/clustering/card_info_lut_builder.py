@@ -47,12 +47,13 @@ class CardInfoLutBuilder(CardCombos):
         )
         self.card_info_lut_path: Path = Path(save_dir) / "card_info_lut.joblib"
         self.centroid_path: Path = Path(save_dir) / "centroids.joblib"
-        try:
-            self.card_info_lut: Dict[str, Any] = joblib.load(self.card_info_lut_path)
-            self.centroids: Dict[str, Any] = joblib.load(self.centroid_path)
-        except FileNotFoundError:
-            self.centroids: Dict[str, Any] = {}
-            self.card_info_lut: Dict[str, Any] = {}
+        # DEBUG : Do not load the previous progress.
+        # try:
+        #     self.card_info_lut: Dict[str, Any] = joblib.load(self.card_info_lut_path)
+        #     self.centroids: Dict[str, Any] = joblib.load(self.centroid_path)
+        # except FileNotFoundError:
+        self.centroids: Dict[str, Any] = {}
+        self.card_info_lut: Dict[str, Any] = {}
 
     def compute(
         self, n_river_clusters: int, n_turn_clusters: int, n_flop_clusters: int,
