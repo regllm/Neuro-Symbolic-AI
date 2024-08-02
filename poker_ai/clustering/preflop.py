@@ -3,6 +3,7 @@ import operator
 import math
 
 from poker_ai.poker.card import Card
+from poker_ai.poker.evaluation.eval_card import EvaluationCard
 
 
 # def make_starting_hand_lossless(starting_hand, short_deck) -> int:
@@ -50,11 +51,11 @@ from poker_ai.poker.card import Card
 
 def make_starting_hand_lossless(starting_hand, short_deck) -> int:
     """"""
-    ranks = []
-    suits = []
+    ranks = set()
+    suits = set()
     for card in starting_hand:
-        ranks.append(card.rank_int)
-        suits.append(card.suit)
+        ranks.add(EvaluationCard.get_rank_int(card) + 2)
+        suits.add(EvaluationCard.get_suit_int(card))
     if len(set(suits)) == 1:
         suited = True
     else:
@@ -77,30 +78,17 @@ def make_starting_hand_lossless(starting_hand, short_deck) -> int:
             idx += 1
 
 
-def compute_preflop_lossless_abstraction(builder) -> Dict[Tuple[Card, Card], int]:
+def compute_preflop_lossless_abstraction(builder) -> Dict[Tuple[int, int], int]:
     """Compute the preflop abstraction dictionary.
 
     Only works for the short deck presently.
     """
-    # Making sure this is 20 card deck with 2-9 removed
-    # allowed_ranks = {10, 11, 12, 13, 14}
-    allowed_ranks = set(list(range(2, 15)))
-    found_ranks = set([c.rank_int for c in builder._cards])
-    # if found_ranks != allowed_ranks:
-    #     raise ValueError(
-    #         f"Preflop lossless abstraction only works for a short deck with "
-    #         f"ranks [10, jack, queen, king, ace]. What was specified="
-    #         f"{found_ranks} doesn't equal what is allowed={allowed_ranks}"
-    #     )
+    
     # Getting combos and indexing with lossless abstraction
-    preflop_lossless: Dict[Tuple[Card, Card], int] = {}
+    preflop_lossless: Dict[Tuple[int, int], int] = {}
     for starting_hand in builder.starting_hands:
-        starting_hand = sorted(
-            list(starting_hand),
-            key=operator.attrgetter("eval_card"),
-            reverse=True
-        )
-        preflop_lossless[tuple(starting_hand)] = make_starting_hand_lossless(
-            starting_hand, builder
+        desc_sorted_starting_hand = (max(starting_hand), min(starting_hand))
+        preflop_lossless[desc_sorted_starting_hand] = make_starting_hand_lossless(
+            desc_sorted_starting_hand, builder
         )
     return preflop_lossless
