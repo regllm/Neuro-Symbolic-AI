@@ -1,7 +1,7 @@
 import logging
-from typing import List
+import math
+from typing import List, Optional
 from itertools import combinations
-import operator
 
 import numpy as np
 from tqdm import tqdm
@@ -35,23 +35,27 @@ class CardCombos:
                 for rank_char in eval_ranks
             ],
         )
+        self._sorted_cards = self._cards.copy()
+        self._sorted_cards.sort()
 
         self.starting_hands = self.get_card_combos(2)
 
         self.flop = self.create_info_combos(
-            self.starting_hands, self.get_card_combos(3)
+            self.starting_hands, 3
         )
         log.info("created flop")
         self.turn = self.create_info_combos(
-            self.starting_hands, self.get_card_combos(4)
+            self.starting_hands, 4
         )
         log.info("created turn")
         self.river = self.create_info_combos(
-            self.starting_hands, self.get_card_combos(5)
+            self.starting_hands, 5
         )
         log.info("created river")
 
-    def get_card_combos(self, num_cards: int) -> np.ndarray:
+    def get_card_combos(
+        self, num_cards: int
+    ) -> np.ndarray:
         """
         Get the card combinations for a given street.
 
@@ -64,13 +68,12 @@ class CardCombos:
         -------
             Combos of cards (Card) -> np.ndarray
         """
-        combos = np.array([c for c in combinations(self._cards, num_cards)])
-        # Sort each combo in ascending orders.
-        combos.sort(1)
+        combos = np.array([c for c in combinations(self._sorted_cards, num_cards)])
+
         return combos
 
     def create_info_combos(
-        self, start_combos: np.ndarray, publics: np.ndarray
+        self, start_combos: np.ndarray, public_num_cards: int
     ) -> np.ndarray:
         """Combinations of private info(hole cards) and public info (board).
 
@@ -89,29 +92,36 @@ class CardCombos:
             Combinations of private information (hole cards) and public
             information (board)
         """
-        if publics.shape[1] == 3:
+        if public_num_cards == 3:
             betting_stage = "flop"
-        elif publics.shape[1] == 4:
+        elif public_num_cards == 4:
             betting_stage = "turn"
-        elif publics.shape[1] == 5:
+        elif public_num_cards == 5:
             betting_stage = "river"
         else:
             betting_stage = "unknown"
         
-        max_count = len(start_combos) * len(publics)
-        hand_size = len(start_combos[0]) + len(publics[0])
+        max_count = len(start_combos) * math.comb(len(self._cards) - len(start_combos[0]), public_num_cards)
+        hand_size = len(start_combos[0]) + public_num_cards
         our_cards = np.zeros((max_count, hand_size))
-        count = 0
+        cursor = 0
 
         for start_combo in tqdm(
             start_combos,
             dynamic_ncols=True,
             desc=f"Creating {betting_stage} info combos",
         ):
+            publics = np.array(
+                [
+                    c for c in combinations(
+                        [c for c in self._sorted_cards if c not in start_combo],
+                        public_num_cards,
+                    )
+                ]
+            )
             for public_combo in publics:
-                if not np.any(np.isin(start_combo, public_combo)):
-                    # Combine hand and public cards.
-                    our_cards[count][:2] = start_combo[::-1]
-                    our_cards[count][2:] = public_combo[::-1]
-                    count += 1
-        return our_cards[:count]
+                our_cards[cursor][:2] = start_combo[::-1]
+                our_cards[cursor][2:] = public_combo[::-1]
+                cursor += 1
+
+        return our_cards
