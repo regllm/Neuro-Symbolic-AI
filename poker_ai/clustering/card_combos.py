@@ -100,7 +100,7 @@ class CardCombos:
         
         max_count = len(start_combos) * len(publics)
         hand_size = len(start_combos[0]) + len(publics[0])
-        our_cards = np.zeros(max_count, hand_size)
+        our_cards = np.zeros((max_count, hand_size))
         count = 0
 
         for start_combo in tqdm(
