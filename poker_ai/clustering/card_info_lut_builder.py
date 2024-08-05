@@ -102,6 +102,7 @@ class CardInfoLutBuilder(CardCombos):
                         chunksize=len(self.river) // 160,
                     ),
                     total=len(self.river),
+                    ascii=" >=",
                 )
             )
         self.centroids["river"], self._river_clusters = self.cluster(
@@ -126,6 +127,7 @@ class CardInfoLutBuilder(CardCombos):
                         chunksize=len(self.turn) // 160,
                     ),
                     total=len(self.turn),
+                    ascii=" >=",
                 )
             )
         self.centroids["turn"], self._turn_clusters = self.cluster(
@@ -148,6 +150,7 @@ class CardInfoLutBuilder(CardCombos):
                         chunksize=len(self.flop) // 160,
                     ),
                     total=len(self.flop),
+                    ascii=" >=",
                 )
             )
         self.centroids["flop"], self._flop_clusters = self.cluster(

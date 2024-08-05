@@ -132,6 +132,7 @@ class CardCombos:
             start_combos,
             dynamic_ncols=True,
             desc=f"Creating {betting_stage} info combos",
+            ascii=" >=",
         ):
             publics = np.array(
                 [
