@@ -99,7 +99,8 @@ class CardInfoLutBuilder(CardCombos):
                     executor.map(
                         self.process_river_ehs,
                         self.river,
-                        chunksize=len(self.river) // 160,
+                        # chunksize=len(self.river) // 160,
+                        chunksize=1,  # To prevent memory overflow
                     ),
                     total=len(self.river),
                     ascii=" >=",
