@@ -54,6 +54,7 @@ class CardCombos:
             self.flop = self.create_info_combos(
                 self.starting_hands, 3
             )
+            joblib.dump(self.flop, self.card_combos_flop_path)
             log.info("created flop")
         try:
             self.turn = joblib.load(self.card_combos_turn_path)
@@ -62,6 +63,7 @@ class CardCombos:
             self.turn = self.create_info_combos(
                 self.starting_hands, 4
             )
+            joblib.dump(self.turn, self.card_combos_turn_path)
             log.info("created turn")
         try:
             self.river = joblib.load(self.card_combos_river_path)
@@ -70,6 +72,7 @@ class CardCombos:
             self.river = self.create_info_combos(
                 self.starting_hands, 5
             )
+            joblib.dump(self.river, self.card_combos_river_path)
             log.info("created river")
 
     def get_card_combos(
