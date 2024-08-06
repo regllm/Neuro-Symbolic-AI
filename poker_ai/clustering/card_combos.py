@@ -47,21 +47,20 @@ class CardCombos:
         card_combos_river_filename = f"card_combos_river_{low_card_rank}_to_{high_card_rank}.joblib"
         self.card_combos_river_path: Path = Path(save_dir) / card_combos_river_filename
         
-        card_combos_flop_raw_filename = f"card_combos_flop_raw_{low_card_rank}_to_{high_card_rank}.csv"
-        self.card_combos_flop_raw_path: Path = Path(save_dir) / card_combos_flop_raw_filename
-        card_combos_turn_raw_filename = f"card_combos_turn_raw_{low_card_rank}_to_{high_card_rank}.csv"
-        self.card_combos_turn_raw_path: Path = Path(save_dir) / card_combos_turn_raw_filename
-        card_combos_river_raw_filename = f"card_combos_river_raw_{low_card_rank}_to_{high_card_rank}.csv"
-        self.card_combos_river_raw_path: Path = Path(save_dir) / card_combos_river_raw_filename
+        card_combos_flop_txt_filename = f"card_combos_flop_txt_{low_card_rank}_to_{high_card_rank}.csv"
+        self.card_combos_flop_txt_path: Path = Path(save_dir) / card_combos_flop_txt_filename
+        card_combos_turn_txt_filename = f"card_combos_turn_txt_{low_card_rank}_to_{high_card_rank}.csv"
+        self.card_combos_turn_txt_path: Path = Path(save_dir) / card_combos_turn_txt_filename
+        card_combos_river_txt_filename = f"card_combos_river_txt_{low_card_rank}_to_{high_card_rank}.csv"
+        self.card_combos_river_txt_path: Path = Path(save_dir) / card_combos_river_txt_filename
 
 
 
         try:
             self.flop = joblib.load(self.card_combos_flop_path)
             log.info("loaded flop")
-            with open(self.card_combos_flop_raw_path, "w") as f:
-                for combo in self.flop:
-                    f.write(",".join([str(i) for i in combo]) + "\n")
+            np.savetxt(card_combos_flop_txt_filename, self.flop)
+            log.info("converted flop")
         except FileNotFoundError:
             self.flop = self.create_info_combos(
                 self.starting_hands, 3
