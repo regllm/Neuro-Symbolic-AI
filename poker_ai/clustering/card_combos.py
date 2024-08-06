@@ -70,6 +70,8 @@ class CardCombos:
         try:
             self.turn = joblib.load(self.card_combos_turn_path)
             log.info("loaded turn")
+            np.savetxt(card_combos_turn_txt_filename, self.turn)
+            log.info("converted turn")
         except FileNotFoundError:
             self.turn = self.create_info_combos(
                 self.starting_hands, 4
@@ -79,6 +81,8 @@ class CardCombos:
         try:
             self.river = joblib.load(self.card_combos_river_path)
             log.info("loaded river")
+            np.savetxt(card_combos_river_txt_filename, self.river)
+            log.info("converted river")
         except FileNotFoundError:
             self.river = self.create_info_combos(
                 self.starting_hands, 5
