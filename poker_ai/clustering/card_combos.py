@@ -46,7 +46,7 @@ class CardCombos:
         self.card_combos_turn_path: Path = Path(save_dir) / card_combos_turn_filename
         card_combos_river_filename = f"card_combos_river_{low_card_rank}_to_{high_card_rank}.joblib"
         self.card_combos_river_path: Path = Path(save_dir) / card_combos_river_filename
-        
+
         card_combos_flop_txt_filename = f"card_combos_flop_txt_{low_card_rank}_to_{high_card_rank}.csv"
         self.card_combos_flop_txt_path: Path = Path(save_dir) / card_combos_flop_txt_filename
         card_combos_turn_txt_filename = f"card_combos_turn_txt_{low_card_rank}_to_{high_card_rank}.csv"
@@ -54,12 +54,12 @@ class CardCombos:
         card_combos_river_txt_filename = f"card_combos_river_txt_{low_card_rank}_to_{high_card_rank}.csv"
         self.card_combos_river_txt_path: Path = Path(save_dir) / card_combos_river_txt_filename
 
-
-
         try:
             self.flop = joblib.load(self.card_combos_flop_path)
             log.info("loaded flop")
-            np.savetxt(card_combos_flop_txt_filename, self.flop)
+            with open(card_combos_flop_txt_filename, "w") as f:
+                for row in tqdm(self.flop, ascii=" >="):
+                    f.write(",".join([str(int(x)) for x in row]) + "\n")
             log.info("converted flop")
         except FileNotFoundError:
             self.flop = self.create_info_combos(
@@ -70,8 +70,8 @@ class CardCombos:
         try:
             self.turn = joblib.load(self.card_combos_turn_path)
             log.info("loaded turn")
-            np.savetxt(card_combos_turn_txt_filename, self.turn)
-            log.info("converted turn")
+            # np.savetxt(card_combos_turn_txt_filename, self.turn)
+            # log.info("converted turn")
         except FileNotFoundError:
             self.turn = self.create_info_combos(
                 self.starting_hands, 4
@@ -81,8 +81,8 @@ class CardCombos:
         try:
             self.river = joblib.load(self.card_combos_river_path)
             log.info("loaded river")
-            np.savetxt(card_combos_river_txt_filename, self.river)
-            log.info("converted river")
+            # np.savetxt(card_combos_river_txt_filename, self.river)
+            # log.info("converted river")
         except FileNotFoundError:
             self.river = self.create_info_combos(
                 self.starting_hands, 5
