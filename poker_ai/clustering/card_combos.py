@@ -62,27 +62,21 @@ class CardCombos:
         ehs_river_csv_filename = f"ehs_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
         self.ehs_river_csv_path: Path = Path(save_dir) / ehs_river_csv_filename
 
-        # if os.path.exists(self.card_combos_flop_path) and not os.path.exists(self.card_combos_flop_csv_path):
-        #     flop = joblib.load(self.card_combos_flop_path)
-        #     log.info("converting flop")
-        #     with open(self.card_combos_flop_csv_path, "w") as f:
-        #         for row in tqdm(flop, ascii=" >="):
-        #             f.write(",".join([str(int(x)) for x in row]) + "\n")
-        #     os.remove(self.card_combos_flop_path)
-        # elif not os.path.exists(self.card_combos_flop_csv_path):
-        #     self.write_info_combos(self.starting_hands, 3, self.card_combos_flop_csv_path)
-        #     log.info("created flop")
-        # else:
-        #     log.info("using pre-written flop")
-
-        try:
-            self.flop = joblib.load(self.card_combos_flop_path)
-            log.info("loaded flop")
-        except FileNotFoundError:
-            self.flop = self.create_info_combos(
-                self.starting_hands, 3
-            )
-            joblib.dump(self.flop, self.card_combos_flop_path)
+        if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
+            river = joblib.load(self.card_combos_river_path)
+            log.info("converting river")
+            with open(self.card_combos_river_csv_path, "w") as f:
+                for row in tqdm(river, ascii=" >="):
+                    for i in range(len(row)):
+                        f.write(str(int(row[i])))
+                        if i < len(row) - 1:
+                            f.write(",")
+                    f.write("\n")
+        elif not os.path.exists(self.card_combos_river_csv_path):
+            self.write_info_combos(self.starting_hands, 5, self.card_combos_river_csv_path)
+            log.info("created river")
+        else:
+            log.info("using pre-written river")
 
         # if os.path.exists(self.card_combos_turn_path) and not os.path.exists(self.card_combos_turn_csv_path):
         #     turn = joblib.load(self.card_combos_turn_path)
@@ -105,22 +99,28 @@ class CardCombos:
                 self.starting_hands, 4
             )
             joblib.dump(self.turn, self.card_combos_turn_path)
+        
+        # if os.path.exists(self.card_combos_flop_path) and not os.path.exists(self.card_combos_flop_csv_path):
+        #     flop = joblib.load(self.card_combos_flop_path)
+        #     log.info("converting flop")
+        #     with open(self.card_combos_flop_csv_path, "w") as f:
+        #         for row in tqdm(flop, ascii=" >="):
+        #             f.write(",".join([str(int(x)) for x in row]) + "\n")
+        #     os.remove(self.card_combos_flop_path)
+        # elif not os.path.exists(self.card_combos_flop_csv_path):
+        #     self.write_info_combos(self.starting_hands, 3, self.card_combos_flop_csv_path)
+        #     log.info("created flop")
+        # else:
+        #     log.info("using pre-written flop")
 
-        if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
-            river = joblib.load(self.card_combos_river_path)
-            log.info("converting river")
-            with open(self.card_combos_river_csv_path, "w") as f:
-                for row in tqdm(river, ascii=" >="):
-                    for i in range(len(row)):
-                        f.write(str(int(row[i])))
-                        if i < len(row) - 1:
-                            f.write(",")
-                    f.write("\n")
-        elif not os.path.exists(self.card_combos_river_csv_path):
-            self.write_info_combos(self.starting_hands, 5, self.card_combos_river_csv_path)
-            log.info("created river")
-        else:
-            log.info("using pre-written river")
+        try:
+            self.flop = joblib.load(self.card_combos_flop_path)
+            log.info("loaded flop")
+        except FileNotFoundError:
+            self.flop = self.create_info_combos(
+                self.starting_hands, 3
+            )
+            joblib.dump(self.flop, self.card_combos_flop_path)
 
     def get_card_combos(
         self, num_cards: int
