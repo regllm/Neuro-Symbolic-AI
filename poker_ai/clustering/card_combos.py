@@ -62,21 +62,23 @@ class CardCombos:
         ehs_river_csv_filename = f"ehs_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
         self.ehs_river_csv_path: Path = Path(save_dir) / ehs_river_csv_filename
 
-        if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
-            river = joblib.load(self.card_combos_river_path)
-            log.info("converting river")
-            with open(self.card_combos_river_csv_path, "w") as f:
-                for row in tqdm(river, ascii=" >="):
-                    for i in range(len(row)):
-                        f.write(str(int(row[i])))
-                        if i < len(row) - 1:
-                            f.write(",")
-                    f.write("\n")
-        elif not os.path.exists(self.card_combos_river_csv_path):
-            self.write_info_combos(self.starting_hands, 5, self.card_combos_river_csv_path)
-            log.info("created river")
-        else:
-            log.info("using pre-written river")
+        # if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
+        #     river = joblib.load(self.card_combos_river_path)
+        #     log.info("converting river")
+        #     with open(self.card_combos_river_csv_path, "w") as f:
+        #         for row in tqdm(river, ascii=" >="):
+        #             for i in range(len(row)):
+        #                 f.write(str(int(row[i])))
+        #                 if i < len(row) - 1:
+        #                     f.write(",")
+        #             f.write("\n")
+        # elif not os.path.exists(self.card_combos_river_csv_path):
+        #     self.write_info_combos(self.starting_hands, 5, self.card_combos_river_csv_path)
+        #     log.info("created river")
+        # else:
+        #     log.info("using pre-written river")
+
+        self.river = self.create_info_combos_iter(self.starting_hands, 5)
 
         # if os.path.exists(self.card_combos_turn_path) and not os.path.exists(self.card_combos_turn_csv_path):
         #     turn = joblib.load(self.card_combos_turn_path)
@@ -141,6 +143,27 @@ class CardCombos:
 
         return combos
 
+    def create_info_combos_iter(
+        self, start_combos: np.ndarray, public_num_cards: int
+    ):
+        hand_size = len(start_combos[0]) + public_num_cards
+
+        for start_combo in start_combos:
+            publics = np.array(
+                [
+                    c for c in combinations(
+                        [c for c in self._sorted_cards if c not in start_combo],
+                        public_num_cards,
+                    )
+                ]
+            )
+            for public_combo in publics:
+                combo = np.zeros(hand_size)
+                combo[:2] = start_combo[::-1]
+                combo[2:] = public_combo[::-1]
+                
+                yield combo
+    
     def write_info_combos(
         self, start_combos: np.ndarray, public_num_cards: int, output_path: str
     ):

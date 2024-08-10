@@ -103,6 +103,7 @@ class CardInfoLutBuilder(CardCombos):
         log.info("Starting computation of river clusters.")
         start = time.time()
 
+        ## Original
         # with concurrent.futures.ProcessPoolExecutor() as executor:
         #     self._river_ehs = list(
         #         tqdm(
@@ -123,6 +124,7 @@ class CardInfoLutBuilder(CardCombos):
         #         river_batch.append(e)
         #     self._river_ehs.append(self.process_river_ehs(e))
         
+        ## Mini batched
         # batch_size = 960
         # loop_count = len(self.river) // batch_size + 1
         # self._river_ehs = np.zeros(len(self.river))
@@ -138,21 +140,37 @@ class CardInfoLutBuilder(CardCombos):
         #         )
         #         self._river_ehs[start:end] = results
         
-        if not os.path.exists(self.ehs_flop_csv_path):
-            river = open(self.card_combos_river_csv_path, "r")
-            river_ehs = open(self.ehs_flop_csv_path, "w")
-            river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
+        ## File-based
+        # if not os.path.exists(self.ehs_flop_csv_path):
+        #     river = open(self.card_combos_river_csv_path, "r")
+        #     river_ehs = open(self.ehs_flop_csv_path, "w")
+        #     river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
             
+        #     with multiprocessing.Pool() as pool:
+        #         for ehs in tqdm(
+        #             pool.imap(self.process_river_ehs, river, chunksize=960),
+        #             ascii=" >=",
+        #             total=river_size,
+        #         ):
+        #             river_ehs.write(",".join([float(x) for x in ehs]))
+            
+        #     river.close()
+        #     river_ehs.close()
+
+        try:
+            self._river_ehs = joblib.load(self.ehs_river_path)
+            log.info("loaded river ehs")
+        except FileNotFoundError:
+            river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
+            self._river_ehs = np.zeros(river_size)
             with multiprocessing.Pool() as pool:
-                for ehs in tqdm(
-                    pool.imap(self.process_river_ehs, river, chunksize=960),
+                for i, ehs in tqdm(
+                    enumerate(pool.imap(self.process_river_ehs, self.river, chunksize=960)),
                     ascii=" >=",
                     total=river_size,
                 ):
-                    river_ehs.write(",".join([float(x) for x in ehs]))
-            
-            river.close()
-            river_ehs.close()
+                    self._river_ehs[i] = ehs
+            joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=self._river_ehs_iter()
