@@ -75,12 +75,12 @@ class CardInfoLutBuilder(CardCombos):
                 builder=self
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
-        # if "river" not in self.card_info_lut:
-        #     self.card_info_lut["river"] = self._compute_river_clusters(
-        #         n_river_clusters,
-        #     )
-        #     joblib.dump(self.card_info_lut, self.card_info_lut_path)
-        #     joblib.dump(self.centroids, self.centroid_path)
+        if "river" not in self.card_info_lut:
+            self.card_info_lut["river"] = self._compute_river_clusters(
+                n_river_clusters,
+            )
+            joblib.dump(self.card_info_lut, self.card_info_lut_path)
+            joblib.dump(self.centroids, self.centroid_path)
         if "turn" not in self.card_info_lut:
             self.card_info_lut["turn"] = self._compute_turn_clusters(n_turn_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
@@ -165,7 +165,7 @@ class CardInfoLutBuilder(CardCombos):
             self._river_ehs = np.zeros(river_size)
             with multiprocessing.Pool() as pool:
                 for i, ehs in tqdm(
-                    enumerate(pool.imap(self.process_river_ehs, self.river, chunksize=960)),
+                    enumerate(pool.imap(self.process_river_ehs, self.river, chunksize=9600)),
                     ascii=" >=",
                     total=river_size,
                 ):
