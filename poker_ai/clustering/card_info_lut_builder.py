@@ -76,27 +76,30 @@ class CardInfoLutBuilder(CardCombos):
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
         if "river" not in self.card_info_lut:
+            self.load_river()
             self.card_info_lut["river"] = self._compute_river_clusters(
                 n_river_clusters,
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         if "turn" not in self.card_info_lut:
+            self.load_turn()
             self.card_info_lut["turn"] = self._compute_turn_clusters(n_turn_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         if "flop" not in self.card_info_lut:
+            self.load_flop()
             self.card_info_lut["flop"] = self._compute_flop_clusters(n_flop_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         end = time.time()
         log.info(f"Finished computation of clusters - took {end - start} seconds.")
 
-    def _river_ehs_iter(self):
-        river_ehs = open(self.ehs_flop_csv_path, "w")
-        for line in river_ehs:
-            yield [float(x) for x in line.split(",")]
-        river_ehs.close()
+    # def _river_ehs_iter(self):
+    #     river_ehs = open(self.ehs_flop_csv_path, "w")
+    #     for line in river_ehs:
+    #         yield [float(x) for x in line.split(",")]
+    #     river_ehs.close()
 
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
@@ -157,23 +160,34 @@ class CardInfoLutBuilder(CardCombos):
         #     river.close()
         #     river_ehs.close()
 
+        river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
         try:
             self._river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
-            self._river_ehs = np.zeros(river_size)
-            with multiprocessing.Pool() as pool:
-                for i, ehs in tqdm(
-                    enumerate(pool.imap(self.process_river_ehs, self.river, chunksize=9600)),
-                    ascii=" >=",
-                    total=river_size,
-                ):
-                    self._river_ehs[i] = ehs
+            self._river_ehs = np.zeros((river_size, 3))
+            batch_size = 50_000
+            cursor = 0
+            while True:
+                done = False
+                with multiprocessing.Pool() as pool:
+                    river_batch = []
+                    for _ in range(batch_size):
+                        try:
+                            river_batch.append(next(self.river))
+                        except StopIteration:
+                            done = True
+                            break
+                    curr_batch_size = len(river_batch)
+                    self._river_ehs[cursor:cursor + curr_batch_size] = pool.map(
+                        self.process_river_ehs, river_batch, chunksize=9600
+                    )
+                if done:
+                    break
             joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
-            num_clusters=n_river_clusters, X=self._river_ehs_iter()
+            num_clusters=n_river_clusters, X=tqdm(self._river_ehs, total=river_size, ascii=" >=")
         )
         end = time.time()
         log.info(
