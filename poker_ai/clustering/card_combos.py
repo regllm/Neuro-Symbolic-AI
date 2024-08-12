@@ -55,12 +55,15 @@ class CardCombos:
         card_combos_river_csv_filename = f"card_combos_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
         self.card_combos_river_csv_path: Path = Path(save_dir) / card_combos_river_csv_filename
 
-        ehs_flop_csv_filename = f"ehs_flop_csv_{low_card_rank}_to_{high_card_rank}.csv"
-        self.ehs_flop_csv_path: Path = Path(save_dir) / ehs_flop_csv_filename
-        ehs_turn_csv_filename = f"ehs_turn_csv_{low_card_rank}_to_{high_card_rank}.csv"
-        self.ehs_turn_csv_path: Path = Path(save_dir) / ehs_turn_csv_filename
-        ehs_river_csv_filename = f"ehs_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
-        self.ehs_river_csv_path: Path = Path(save_dir) / ehs_river_csv_filename
+        ehs_river_filename = f"ehs_river_{low_card_rank}_to_{high_card_rank}.joblib"
+        self.ehs_river_path: Path = Path(save_dir) / ehs_river_filename
+
+        # ehs_flop_csv_filename = f"ehs_flop_csv_{low_card_rank}_to_{high_card_rank}.csv"
+        # self.ehs_flop_csv_path: Path = Path(save_dir) / ehs_flop_csv_filename
+        # ehs_turn_csv_filename = f"ehs_turn_csv_{low_card_rank}_to_{high_card_rank}.csv"
+        # self.ehs_turn_csv_path: Path = Path(save_dir) / ehs_turn_csv_filename
+        # ehs_river_csv_filename = f"ehs_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
+        # self.ehs_river_csv_path: Path = Path(save_dir) / ehs_river_csv_filename
 
         # if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
         #     river = joblib.load(self.card_combos_river_path)
