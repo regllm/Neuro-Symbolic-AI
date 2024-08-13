@@ -170,7 +170,7 @@ class CardInfoLutBuilder(CardCombos):
             cursor = 0
             while True:
                 done = False
-                with multiprocessing.Pool() as pool:
+                with concurrent.futures.ProcessPoolExecutor() as executor:
                     river_batch = []
                     for _ in range(batch_size):
                         try:
@@ -179,9 +179,11 @@ class CardInfoLutBuilder(CardCombos):
                             done = True
                             break
                     curr_batch_size = len(river_batch)
-                    self._river_ehs[cursor:cursor + curr_batch_size] = pool.map(
+                    batch_result = executor.map(
                         self.process_river_ehs, river_batch, chunksize=9600
                     )
+                    self._river_ehs[cursor:cursor + curr_batch_size] = batch_result
+                    cursor += curr_batch_size
                 if done:
                     break
             joblib.dump(self._river_ehs, self.ehs_river_path)
