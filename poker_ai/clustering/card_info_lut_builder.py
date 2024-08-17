@@ -191,9 +191,8 @@ class CardInfoLutBuilder(CardCombos):
                         batch_result = executor.map(
                             self.dummy, river_batch, chunksize=9600
                         )
-                        print("BATCH RESULT", batch_result)
-                        for i, v in enumerate(batch_result):
-                            self._river_ehs[cursor + i] = v
+                        self._river_ehs[cursor:cursor + batch_cursor] = batch_result
+
                         cursor += batch_cursor
                         pbar.update(batch_cursor)
                     if batch_cursor < batch_size:
