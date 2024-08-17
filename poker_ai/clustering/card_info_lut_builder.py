@@ -175,12 +175,12 @@ class CardInfoLutBuilder(CardCombos):
                 while True:
                     batch_cursor = 0
                     river_batch = np.zeros((batch_size, 7), dtype=int)
-                    for _ in range(batch_size):
-                        try:
-                            river_batch[batch_cursor] = next(self.river)
-                            batch_cursor += 1
-                        except StopIteration:
-                            break
+                    # for _ in range(batch_size):
+                    #     try:
+                    #         river_batch[batch_cursor] = next(self.river)
+                    #         batch_cursor += 1
+                    #     except StopIteration:
+                    #         break
                     if batch_cursor < batch_size:
                         river_batch = river_batch[:batch_cursor]
                     
