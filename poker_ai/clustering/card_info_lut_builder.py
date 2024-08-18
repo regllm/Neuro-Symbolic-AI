@@ -216,7 +216,7 @@ class CardInfoLutBuilder(CardCombos):
                         )
                     ]
                 )
-                for i, public_combo in enumerate(publics):
+                for i, public_combo in enumerate(publics[:10]):
                     batch_cards[i][:2] = start_combo[::-1]
                     batch_cards[i][2:] = public_combo[::-1]
                 
@@ -224,7 +224,7 @@ class CardInfoLutBuilder(CardCombos):
                     batch_result = executor.map(
                         self.process_river_ehs, batch_cards, chunksize=9600
                     )
-                    print("BATCH RESULT", list(batch_result))
+                    # print("BATCH RESULT", list(batch_result))
                     self._river_ehs[cursor:cursor + publics_size] = batch_result
 
                     cursor += publics_size
