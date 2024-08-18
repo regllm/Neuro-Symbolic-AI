@@ -222,7 +222,8 @@ class CardInfoLutBuilder(CardCombos):
                 
                 with concurrent.futures.ProcessPoolExecutor() as executor:
                     batch_result = executor.map(
-                        self.process_river_ehs, batch_cards, chunksize=9600
+                        # self.process_river_ehs, batch_cards, chunksize=9600
+                        self.process_river_ehs, batch_cards
                     )
                     # print("BATCH RESULT", list(batch_result))
                     self._river_ehs[cursor:cursor + publics_size] = batch_result
