@@ -229,6 +229,7 @@ class CardInfoLutBuilder(CardCombos):
 
                     cursor += publics_size
                         # pbar.update(publics_size)
+                print("Done on one line")
                     
             joblib.dump(self._river_ehs, self.ehs_river_path)
         
