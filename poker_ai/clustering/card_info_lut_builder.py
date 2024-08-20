@@ -77,11 +77,9 @@ class CardInfoLutBuilder(CardCombos):
                 builder=self
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
-        if "river" not in self.card_info_lut:
-            self.load_river()
-            self.card_info_lut["river"] = self._compute_river_clusters(
-                n_river_clusters,
-            )
+        if "flop" not in self.card_info_lut:
+            self.load_flop()
+            self.card_info_lut["flop"] = self._compute_flop_clusters(n_flop_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         if "turn" not in self.card_info_lut:
@@ -89,9 +87,11 @@ class CardInfoLutBuilder(CardCombos):
             self.card_info_lut["turn"] = self._compute_turn_clusters(n_turn_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
-        if "flop" not in self.card_info_lut:
-            self.load_flop()
-            self.card_info_lut["flop"] = self._compute_flop_clusters(n_flop_clusters)
+        if "river" not in self.card_info_lut:
+            self.load_river()
+            self.card_info_lut["river"] = self._compute_river_clusters(
+                n_river_clusters,
+            )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         end = time.time()

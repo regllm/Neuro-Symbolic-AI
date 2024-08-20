@@ -1,3 +1,7 @@
+# Cache files
+*.joblib
+
+# Local
 research/
 tags
 tags/
