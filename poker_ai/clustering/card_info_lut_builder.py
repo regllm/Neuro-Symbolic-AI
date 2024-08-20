@@ -137,8 +137,8 @@ class CardInfoLutBuilder(CardCombos):
                         result[(start + i) * 3 + 1] = ehs[1]
                         result[(start + i) * 3 + 2] = ehs[2]
                 
-                worker_count = 96
-                batch_size = 1000
+                worker_count = multiprocessing.cpu_count()
+                batch_size = min(10_000, river_size // worker_count)
                 cursor = 0
 
                 while True:
@@ -154,11 +154,12 @@ class CardInfoLutBuilder(CardCombos):
                             except StopIteration:
                                 task_done = True
                                 break
-                        process = multiprocessing.Process(
-                            target=process_all, args=(batch, cursor, self._river_ehs_flat)
-                        )
-                        process.start()
-                        processes.append(process)
+                        if len(batch) > 0:
+                            process = multiprocessing.Process(
+                                target=process_all, args=(batch, cursor, self._river_ehs_flat)
+                            )
+                            process.start()
+                            processes.append(process)
                         curr_batch_sizes.append(len(batch))
                         cursor += len(batch)
                 
