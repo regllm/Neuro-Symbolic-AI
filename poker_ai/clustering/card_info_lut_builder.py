@@ -1,3 +1,4 @@
+import ctypes
 import logging
 import time
 import os
@@ -102,33 +103,73 @@ class CardInfoLutBuilder(CardCombos):
     #         yield [float(x) for x in line.split(",")]
     #     river_ehs.close()
 
+    def _river_ehs_flat_iter(self):
+        cursor = 0
+        ehs = np.zeros(3)
+        for x in self._river_ehs_flat:
+            ehs[cursor] = x
+            if cursor == 2:
+                yield ehs
+                cursor = 0
+                ehs = np.zeros(3)
+            else:
+                cursor += 1                
+
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
         start = time.time()
 
-        batch = []
-        for i in range(5):
-            batch.append(next(self.river))
-        result = multiprocessing.Array("i", 5) 
+        river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
+        try:
+            self._river_ehs_flat = joblib.load(self.ehs_river_path)
+            log.info("loaded river ehs")
+        except FileNotFoundError:
+            with tqdm(total=river_size) as pbar:
+                self._river_ehs_flat = multiprocessing.Array(
+                    ctypes.c_float, river_size * 3
+                )
 
-        def process_all(batch, result):
-            for i, x in enumerate(batch):
-                result[i] = self.process_river_ehs(x)
+                def process_all(batch, start, result):
+                    for i, x in enumerate(batch):
+                        ehs = self.process_river_ehs(x)
+                        result[(start + i) * 3] = ehs[0]
+                        result[(start + i) * 3 + 1] = ehs[1]
+                        result[(start + i) * 3 + 2] = ehs[2]
+                
+                worker_count = 96
+                batch_size = 100
+                cursor = 0
 
-        r = next(self.river)
-        print("RIVER")
-        print(r)
-        a = self.process_river_ehs(r)
-        print("RIVER A")
-        print(a)
-        process = multiprocessing.Process(target=process_all, args=(batch, result))
-        process.start()
-        process.join()
-        print("RESULT")
-        for i in result:
-            print(i)
+                while True:
+                    processes = []
+                    curr_batch_sizes = []
+                    task_done = False
 
+                    for _ in range(worker_count):
+                        batch = []
+                        for _ in range(batch_size):
+                            try:
+                                batch.append(next(self.river))
+                            except StopIteration:
+                                task_done = True
+                                break
+                        process = multiprocessing.Process(
+                            target=process_all, args=(batch, cursor, self._river_ehs_flat)
+                        )
+                        process.start()
+                        processes.append(process)
+                        curr_batch_sizes.append(len(batch))
+                        cursor += len(batch)
+                
+                    for process, curr_batch_size in zip(processes, curr_batch_sizes):
+                        process.join()
+                        pbar.update(curr_batch_size)
+                    
+                    if task_done:
+                        break
+            joblib.dump(np.array(self._river_ehs_flat), self.ehs_river_path)
+                
         ## Original
         # with concurrent.futures.ProcessPoolExecutor() as executor:
         #     self._river_ehs = list(
@@ -219,7 +260,7 @@ class CardInfoLutBuilder(CardCombos):
         #         joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
-            num_clusters=n_river_clusters, X=tqdm(self._river_ehs, total=river_size, ascii=" >=")
+            num_clusters=n_river_clusters, X=tqdm(self._river_ehs_flat_iter(), total=river_size, ascii=" >=")
         )
         end = time.time()
         log.info(
