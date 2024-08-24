@@ -189,8 +189,10 @@ class CardInfoLutBuilder(CardCombos):
                             # Failed to handle this batch.
                             batch_failed = True
                             cursor -= total_batch_size
-                            log.info("Reached timeout and failed to handle the batch. Now reattempting to calculate the same batch.")
-                            continue
+                            break
+
+                    if batch_failed:
+                        continue
 
                     end = time.time()
                     if max_batch_seconds is None:
