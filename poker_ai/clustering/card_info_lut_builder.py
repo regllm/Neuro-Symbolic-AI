@@ -205,22 +205,11 @@ class CardInfoLutBuilder(CardCombos):
             joblib.dump(np.array(self._river_ehs_flat), self.ehs_river_path)
         
         # Unflatten river ehs
-        river_ehs = np.zeros((len(self._river_ehs_flat) // 3, 3))
-        line_cursor = 0
-        cursor = 0
-        for x in tqdm(
-            self._river_ehs_flat,
-            dynamic_ncols=True,
-            desc=f"Unflattening river ehs",
-            ascii=" >=",
-        ):
-            river_ehs[line_cursor][cursor] = x
-            if cursor == 2:
-                cursor = 0
-                line_cursor += 1
-            else:
-                cursor += 1
-                
+        log.info("Unflattening the array")
+        if type(self._river_ehs_flat) != np.ndarray:
+            self._river_ehs_flat = np.array(self._river_ehs_flat)
+        river_ehs = self._river_ehs_flat.reshape(-1, 3)
+
         ## Original
         # with concurrent.futures.ProcessPoolExecutor() as executor:
         #     self._river_ehs = list(
