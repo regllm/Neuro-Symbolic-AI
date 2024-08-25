@@ -203,6 +203,23 @@ class CardInfoLutBuilder(CardCombos):
                     if task_done:
                         break
             joblib.dump(np.array(self._river_ehs_flat), self.ehs_river_path)
+        
+        # Unflatten river ehs
+        river_ehs = np.zeros((len(self._river_ehs_flat) // 3, 3))
+        line_cursor = 0
+        cursor = 0
+        for x in tqdm(
+            self._river_ehs_flat,
+            dynamic_ncols=True,
+            desc=f"Unflattening river ehs",
+            ascii=" >=",
+        ):
+            river_ehs[line_cursor][cursor] = x
+            if cursor == 2:
+                cursor = 0
+                line_cursor += 1
+            else:
+                cursor += 1
                 
         ## Original
         # with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -220,7 +237,7 @@ class CardInfoLutBuilder(CardCombos):
         #     )
         
         self.centroids["river"], self._river_clusters = self.cluster(
-            num_clusters=n_river_clusters, X=self._river_ehs_flat_iter()
+            num_clusters=n_river_clusters, X=river_ehs
         )
         end = time.time()
         log.info(
