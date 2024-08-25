@@ -206,17 +206,22 @@ class CardInfoLutBuilder(CardCombos):
         """Compute turn clusters and create lookup table."""
         log.info("Starting computation of turn clusters.")
         start = time.time()
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            self._turn_ehs_distributions = list(
-                tqdm(
-                    executor.map(
-                        self.process_turn_ehs_distributions,
-                        self.turn,
-                        chunksize=len(self.turn) // 160,
-                    ),
-                    total=len(self.turn),
-                    ascii=" >=",
-                )
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     self._turn_ehs_distributions = list(
+        #         tqdm(
+        #             executor.map(
+        #                 self.process_turn_ehs_distributions,
+        #                 self.turn,
+        #                 chunksize=len(self.turn) // 160,
+        #             ),
+        #             total=len(self.turn),
+        #             ascii=" >=",
+        #         )
+        #     )
+        self._turn_ehs_distributions = []
+        for combo in tqdm(self.turn, ascii=" >="):
+            self._turn_ehs_distributions.append(
+                self.process_turn_ehs_distributions(combo)
             )
         self.centroids["turn"], self._turn_clusters = self.cluster(
             num_clusters=n_turn_clusters, X=self._turn_ehs_distributions
