@@ -99,24 +99,6 @@ class CardInfoLutBuilder(CardCombos):
         end = time.time()
         log.info(f"Finished computation of clusters - took {end - start} seconds.")
 
-    # def _river_ehs_iter(self):
-    #     river_ehs = open(self.ehs_flop_csv_path, "w")
-    #     for line in river_ehs:
-    #         yield [float(x) for x in line.split(",")]
-    #     river_ehs.close()
-
-    def _river_ehs_flat_iter(self):
-        cursor = 0
-        ehs = np.zeros(3)
-        for x in self._river_ehs_flat:
-            ehs[cursor] = x
-            if cursor == 2:
-                yield ehs
-                cursor = 0
-                ehs = np.zeros(3)
-            else:
-                cursor += 1                
-
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
@@ -124,7 +106,7 @@ class CardInfoLutBuilder(CardCombos):
 
         river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
         try:
-            self._river_ehs_flat = joblib.load(self.ehs_river_path)
+            river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
             with tqdm(total=river_size, ascii=" >=") as pbar:
@@ -204,29 +186,11 @@ class CardInfoLutBuilder(CardCombos):
                     
                     if task_done:
                         break
-            joblib.dump(np.array(self._river_ehs_flat), self.ehs_river_path)
-        
-        # Unflatten river ehs
-        log.info("Unflattening the array")
-        if type(self._river_ehs_flat) != np.ndarray:
-            self._river_ehs_flat = np.array(self._river_ehs_flat)
-        river_ehs = self._river_ehs_flat.reshape(-1, 3)
+            
+            # Unflatten river ehs
+            river_ehs = np.array(self._river_ehs_flat).reshape(-1, 3)
+            joblib.dump(river_ehs, self.ehs_river_path)
 
-        ## Original
-        # with concurrent.futures.ProcessPoolExecutor() as executor:
-        #     self._river_ehs = list(
-        #         tqdm(
-        #             executor.map(
-        #                 self.process_river_ehs,
-        #                 self.river,
-        #                 # chunksize=len(self.river) // 160,
-        #                 chunksize=1,  # To prevent memory overflow
-        #             ),
-        #             total=len(self.river),
-        #             ascii=" >=",
-        #         )
-        #     )
-        
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=river_ehs
         )
