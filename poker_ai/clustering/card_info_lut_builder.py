@@ -109,85 +109,89 @@ class CardInfoLutBuilder(CardCombos):
             river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            with tqdm(total=river_size, ascii=" >=") as pbar:
-                self._river_ehs_flat = multiprocessing.Array(
-                    ctypes.c_float, river_size * 3
-                )
+            pbar = None
+            self._river_ehs_flat = multiprocessing.Array(
+                ctypes.c_float, river_size * 3
+            )
 
-                def process_all(batch, start, result):
-                    for i, x in enumerate(batch):
-                        ehs = self.process_river_ehs(x)
-                        result[(start + i) * 3] = ehs[0]
-                        result[(start + i) * 3 + 1] = ehs[1]
-                        result[(start + i) * 3 + 2] = ehs[2]
+            def process_all(batch, start, result):
+                for i, x in enumerate(batch):
+                    ehs = self.process_river_ehs(x)
+                    result[(start + i) * 3] = ehs[0]
+                    result[(start + i) * 3 + 1] = ehs[1]
+                    result[(start + i) * 3 + 2] = ehs[2]
+            
+            worker_count = multiprocessing.cpu_count()
+            batch_size = min(10_000, river_size // worker_count)
+            cursor = 0
+            max_batch_seconds = None
+            batch_failed = False
+
+            while True:
+                task_done = False
                 
-                worker_count = multiprocessing.cpu_count()
-                batch_size = min(10_000, river_size // worker_count)
-                cursor = 0
-                max_batch_seconds = None
+                if batch_failed:
+                    batches = cached_batches
+                else:
+                    batches = []
+                    for _ in range(worker_count):
+                        batch = []
+                        for _ in range(batch_size):
+                            try:
+                                batch.append(next(self.river))
+                            except StopIteration:
+                                task_done = True
+                                break
+                        if len(batch) > 0:
+                            batches.append(batch)
+                
+                cached_batches = batches
                 batch_failed = False
-
-                while True:
-                    task_done = False
-                    
-                    if batch_failed:
-                        batches = cached_batches
-                    else:
-                        batches = []
-                        for _ in range(worker_count):
-                            batch = []
-                            for _ in range(batch_size):
-                                try:
-                                    batch.append(next(self.river))
-                                except StopIteration:
-                                    task_done = True
-                                    break
-                            if len(batch) > 0:
-                                batches.append(batch)
-                    
-                    cached_batches = batches
-                    batch_failed = False
-                    
-                    total_batch_size = 0
-                    processes = []
-
-                    start = time.time()
-                    for batch in batches:
-                        process = multiprocessing.Process(
-                            target=process_all, args=(batch, cursor, self._river_ehs_flat)
-                        )
-                        process.start()
-                        processes.append(process)
-                        total_batch_size += len(batch)
-                        cursor += len(batch)
                 
-                    for process in processes:
-                        if max_batch_seconds is None:
-                            process.join()
-                            continue
-                        process.join(timeout=max_batch_seconds)
+                total_batch_size = 0
+                processes = []
 
-                        if process.is_alive():
-                            # Failed to handle this batch.
-                            batch_failed = True
-                            cursor -= total_batch_size
-                            break
-
-                    if batch_failed:
-                        continue
-
-                    end = time.time()
+                start = time.time()
+                for batch in batches:
+                    process = multiprocessing.Process(
+                        target=process_all, args=(batch, cursor, self._river_ehs_flat)
+                    )
+                    process.start()
+                    processes.append(process)
+                    total_batch_size += len(batch)
+                    cursor += len(batch)
+            
+                for process in processes:
                     if max_batch_seconds is None:
-                        duration = end - start
-                        max_batch_seconds = int(duration * 5)
-                        log.info(f"Completed first batch of river ehs in {duration:.2f} seconds.")
-                        log.info(f"Setting batch timeout as {max_batch_seconds} seconds.")
-                    pbar.update(total_batch_size)
-                    
-                    if task_done:
+                        process.join()
+                        continue
+                    process.join(timeout=max_batch_seconds)
+
+                    if process.is_alive():
+                        # Failed to handle this batch.
+                        batch_failed = True
+                        cursor -= total_batch_size
                         break
+
+                if batch_failed:
+                    continue
+
+                end = time.time()
+                if max_batch_seconds is None:
+                    duration = end - start
+                    max_batch_seconds = int(duration * 3)
+                    log.info(f"Completed first batch of river ehs in {duration:.2f} seconds.")
+                    log.info(f"Setting batch timeout as {max_batch_seconds} seconds.")
+                    pbar = tqdm(total=river_size, ascii=" >=")
+                pbar.update(total_batch_size)
+                
+                if task_done:
+                    break
+            
+            pbar.close()
             
             # Unflatten river ehs
+            log.info(f"Unflattening the array.")
             river_ehs = np.array(self._river_ehs_flat).reshape(-1, 3)
             joblib.dump(river_ehs, self.ehs_river_path)
 
