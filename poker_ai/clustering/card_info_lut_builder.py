@@ -1,13 +1,12 @@
 import ctypes
 import logging
 import time
-import os
-from pathlib import Path
-from typing import Any, Dict, List
-from itertools import combinations
 import concurrent.futures
 import multiprocessing
 import math
+from pathlib import Path
+from typing import Any, Dict
+from multiprocessing.shared_memory import SharedMemory
 
 import joblib
 import numpy as np
@@ -104,22 +103,29 @@ class CardInfoLutBuilder(CardCombos):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
         start = time.time()
-
+        river_ehs_sm = None
         river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
         try:
             river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            self._river_ehs_flat = multiprocessing.Array(
-                ctypes.c_float, river_size * 3
+            # Allocate shared memory for river_ehs
+            river_ehs_bytes = river_size * 3 * 8
+            river_ehs_sm = SharedMemory(
+                name="river_ehs_mem", create=True, size=river_ehs_bytes
+            )
+            river_ehs = np.ndarray(
+                (river_size, 3), dtype=np.double, buffer=river_ehs_sm.buf
             )
 
-            def process_all(batch, start, result):
+            def process_all(batch, cursor, river_size):
+                sm = SharedMemory("river_ehs_mem")
+                result = np.ndarray(
+                    (river_size, 3), dtype=np.double, buffer=sm.buf
+                )
                 for i, x in enumerate(batch):
-                    ehs = self.process_river_ehs(x)
-                    result[(start + i) * 3] = ehs[0]
-                    result[(start + i) * 3 + 1] = ehs[1]
-                    result[(start + i) * 3 + 2] = ehs[2]
+                    result[cursor] = self.process_river_ehs(x)
+                sm.close()
             
             worker_count = multiprocessing.cpu_count()
             batch_size = min(10_000, river_size // worker_count)
@@ -155,7 +161,7 @@ class CardInfoLutBuilder(CardCombos):
                     start = time.time()
                     for batch in batches:
                         process = multiprocessing.Process(
-                            target=process_all, args=(batch, cursor, self._river_ehs_flat)
+                            target=process_all, args=(batch, cursor, river_size)
                         )
                         process.start()
                         processes.append(process)
@@ -188,12 +194,6 @@ class CardInfoLutBuilder(CardCombos):
                     
                     if task_done:
                         break
-            
-            joblib.dump(self._river_ehs_flat, self.ehs_river_flat_path)
-            
-            # Unflatten river ehs
-            log.info(f"Unflattening the array.")
-            river_ehs = np.array(self._river_ehs_flat).reshape(-1, 3)
             joblib.dump(river_ehs, self.ehs_river_path)
 
         self.centroids["river"], self._river_clusters = self.cluster(
@@ -203,6 +203,9 @@ class CardInfoLutBuilder(CardCombos):
         log.info(
             f"Finished computation of river clusters - took {end - start} seconds."
         )
+        if river_ehs_sm is not None:
+            river_ehs_sm.close()
+            river_ehs_sm.unlink()
         return self.create_card_lookup(self._river_clusters, self.river)
 
     def _compute_turn_clusters(self, n_turn_clusters: int):
