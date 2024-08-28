@@ -285,9 +285,9 @@ class CardInfoLutBuilder(CardCombos):
         prob_unit = 1 / self.n_simulations_turn
         prob_sub_unit = 1 / self.n_simulations_river
         ehs: np.ndarray = np.zeros(3)
-        our_hand = np.zeros(len(public) + 1)
+        our_hand = np.zeros(len(public) + 1, dtype=int)
         our_hand[:len(public)] = public
-        opp_hand = np.zeros(len(public) + 1)
+        opp_hand = np.zeros(len(public) + 1, dtype=int)
         opp_hand[:len(public)] = public
 
         turn_ehs_distribution = np.zeros(len(self.centroids["river"]))
