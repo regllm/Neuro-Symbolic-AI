@@ -19,6 +19,7 @@ from poker_ai.clustering.card_combos import CardCombos
 from poker_ai.clustering.game_utility import GameUtility
 from poker_ai.clustering.preflop import compute_preflop_lossless_abstraction
 from poker_ai.poker.evaluation import Evaluator
+from poker_ai.utils.safethread import batch_process
 
 log = logging.getLogger("poker_ai.clustering.runner")
 
@@ -188,6 +189,8 @@ class CardInfoLutBuilder(CardCombos):
                     if task_done:
                         break
             
+            joblib.dump(self._river_ehs_flat, self.ehs_river_flat_path)
+            
             # Unflatten river ehs
             log.info(f"Unflattening the array.")
             river_ehs = np.array(self._river_ehs_flat).reshape(-1, 3)
@@ -206,6 +209,21 @@ class CardInfoLutBuilder(CardCombos):
         """Compute turn clusters and create lookup table."""
         log.info("Starting computation of turn clusters.")
         start = time.time()
+
+        def batch_process(batch, cursor, result):
+            for i, x in enumerate(batch):
+                ehs = self.process_turn_ehs_distributions(x)
+                result_pos = (cursor + i) * 3
+                result[result_pos:result_pos + 3] = ehs[0]
+                result[result_pos + 1] = ehs[1]
+                result[result_pos + 2] = ehs[2]
+        
+        batch_process(
+            self.turn,
+            batch_process,
+        )
+
+
         # with concurrent.futures.ProcessPoolExecutor() as executor:
         #     self._turn_ehs_distributions = list(
         #         tqdm(
@@ -274,10 +292,29 @@ class CardInfoLutBuilder(CardCombos):
             ehs[idx] += 1 / self.n_simulations_river
         return ehs
     
-    def quick_simulate_get_turn_ehs_distributions(
+    def simulate_get_turn_ehs_distributions(
         self,
         public: np.ndarray,
     ) -> np.ndarray:
+        """
+        Get histogram of frequencies that a given turn situation resulted in a
+        certain cluster id after a river simulation.
+
+        Parameters
+        ----------
+        available_cards : np.ndarray
+            Array of available cards on the turn
+        public : np.ndarray
+            Cards of our hand (public[:2]) and the board as of the turn (public[2:])
+            concatenated.
+
+        Returns
+        -------
+        turn_ehs_distribution : np.ndarray
+            Array of counts for each cluster the turn fell into by the river
+            after simulations
+        """
+
         available_cards = np.array([c for c in self._cards if c not in public])
         hand_size = len(public) + 1
         hand_evaluator = self._evaluator.hand_size_map[hand_size]
@@ -291,6 +328,7 @@ class CardInfoLutBuilder(CardCombos):
         opp_hand[:len(public)] = public
 
         turn_ehs_distribution = np.zeros(len(self.centroids["river"]))
+        # Sample river cards and run simulations.
         for _ in range(self.n_simulations_turn):
             river_card = np.random.choice(available_cards, 1, replace=False)
             non_river_cards = np.array([c for c in available_cards if c != river_card])
@@ -309,6 +347,8 @@ class CardInfoLutBuilder(CardCombos):
                 else:
                     ehs[2] += prob_sub_unit
             
+            # Get EMD for expected hand strength against each river centroid
+            # to which does it belong?
             for idx, river_centroid in enumerate(self.centroids["river"]):
                 emd = wasserstein_distance(ehs, river_centroid)
                 if idx == 0:
@@ -321,53 +361,6 @@ class CardInfoLutBuilder(CardCombos):
             # now increment the cluster to which it belongs -
             turn_ehs_distribution[min_idx] += prob_unit
     
-        return turn_ehs_distribution
-
-    def simulate_get_turn_ehs_distributions(
-        self,
-        available_cards: np.ndarray,
-        the_board: np.ndarray,
-        our_hand: np.ndarray,
-    ) -> np.ndarray:
-        """
-        Get histogram of frequencies that a given turn situation resulted in a
-        certain cluster id after a river simulation.
-
-        Parameters
-        ----------
-        available_cards : np.ndarray
-            Array of available cards on the turn
-        the_board : np.nearray
-            The board as of the turn
-        our_hand : np.ndarray
-            Cards our hand (Card)
-
-        Returns
-        -------
-        turn_ehs_distribution : np.ndarray
-            Array of counts for each cluster the turn fell into by the river
-            after simulations
-        """
-        turn_ehs_distribution = np.zeros(len(self.centroids["river"]))
-        # sample river cards and run a simulation
-        for _ in range(self.n_simulations_turn):
-            river_card = np.random.choice(available_cards, 1, replace=False)
-            board = np.append(the_board, river_card)
-            game = GameUtility(our_hand=our_hand, board=board, cards=self._cards)
-            ehs = self.simulate_get_ehs(game)
-            # get EMD for expected hand strength against each river centroid
-            # to which does it belong?
-            for idx, river_centroid in enumerate(self.centroids["river"]):
-                emd = wasserstein_distance(ehs, river_centroid)
-                if idx == 0:
-                    min_idx = idx
-                    min_emd = emd
-                else:
-                    if emd < min_emd:
-                        min_idx = idx
-                        min_emd = emd
-            # now increment the cluster to which it belongs -
-            turn_ehs_distribution[min_idx] += 1 / self.n_simulations_turn
         return turn_ehs_distribution
 
     def process_river_ehs(self, public: np.ndarray) -> np.ndarray:
@@ -437,11 +430,8 @@ class CardInfoLutBuilder(CardCombos):
         -------
             Potential aware turn distributions
         """
-        available_cards: np.ndarray = self.get_available_cards(
-            cards=self._cards, unavailable_cards=public
-        )
         # sample river cards and run a simulation
-        turn_ehs_distribution = self.quick_simulate_get_turn_ehs_distributions(
+        turn_ehs_distribution = self.simulate_get_turn_ehs_distributions(
             public,
         )
         return turn_ehs_distribution
@@ -475,7 +465,7 @@ class CardInfoLutBuilder(CardCombos):
             available_cards_turn = np.array(
                 [x for x in available_cards if x != turn_card[0]]
             )
-            turn_ehs_distribution = self.quick_simulate_get_turn_ehs_distributions(
+            turn_ehs_distribution = self.simulate_get_turn_ehs_distributions(
                 extended_public,
             )
             for idx, turn_centroid in enumerate(self.centroids["turn"]):
