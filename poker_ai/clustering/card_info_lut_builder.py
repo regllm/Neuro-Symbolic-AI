@@ -144,7 +144,8 @@ class CardInfoLutBuilder(CardCombos):
         self._turn_ehs_distributions, ehs_sm = multiprocess_ehs_calc(
             iter(self.turn),
             batch_tasker,
-            len(self.turn)
+            len(self.turn),
+            len(self.centroids["river"]),
         )
 
         # with concurrent.futures.ProcessPoolExecutor() as executor:
