@@ -1,12 +1,8 @@
-import ctypes
 import logging
 import time
-import concurrent.futures
-import multiprocessing
 import math
 from pathlib import Path
 from typing import Any, Dict
-from multiprocessing.shared_memory import SharedMemory
 
 import joblib
 import numpy as np
@@ -147,7 +143,7 @@ class CardInfoLutBuilder(CardCombos):
             len(self.turn),
             len(self.centroids["river"]),
         )
-        
+
         self.centroids["turn"], self._turn_clusters = self.cluster(
             num_clusters=n_turn_clusters, X=self._turn_ehs_distributions
         )
@@ -163,23 +159,30 @@ class CardInfoLutBuilder(CardCombos):
         """Compute flop clusters and create lookup table."""
         log.info("Starting computation of flop clusters.")
         start = time.time()
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            self._flop_potential_aware_distributions = list(
-                tqdm(
-                    executor.map(
-                        self.process_flop_potential_aware_distributions,
-                        self.flop,
-                        chunksize=len(self.flop) // 160,
-                    ),
-                    total=len(self.flop),
-                    ascii=" >=",
+        ehs_sm = None
+
+        def batch_tasker(batch, cursor, result):
+            for i, x in enumerate(batch):
+                result[cursor] = (
+                    self.process_flop_potential_aware_distributions(x)
                 )
-            )
+        
+        self._turn_ehs_distributions, ehs_sm = multiprocess_ehs_calc(
+            iter(self.flop),
+            batch_tasker,
+            len(self.flop),
+            len(self.centroids["turn"]),
+        )
+
         self.centroids["flop"], self._flop_clusters = self.cluster(
             num_clusters=n_flop_clusters, X=self._flop_potential_aware_distributions
         )
         end = time.time()
         log.info(f"Finished computation of flop clusters - took {end - start} seconds.")
+
+        ehs_sm.close()
+        ehs_sm.unlink()
+
         return self.create_card_lookup(self._flop_clusters, self.flop)
 
     def simulate_get_ehs(self, game: GameUtility,) -> np.ndarray:
