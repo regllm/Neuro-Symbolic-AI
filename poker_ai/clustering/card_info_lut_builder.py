@@ -107,7 +107,7 @@ class CardInfoLutBuilder(CardCombos):
         except FileNotFoundError:
             def batch_tasker(batch, cursor, result):
                 for i, x in enumerate(batch):
-                    result[cursor] = self.process_river_ehs(x)
+                    result[cursor + i] = self.process_river_ehs(x)
             
             river_ehs, river_ehs_sm = multiprocess_ehs_calc(
                 self.river, batch_tasker, river_size
@@ -135,7 +135,7 @@ class CardInfoLutBuilder(CardCombos):
 
         def batch_tasker(batch, cursor, result):
             for i, x in enumerate(batch):
-                result[cursor] = self.process_turn_ehs_distributions(x)
+                result[cursor + i] = self.process_turn_ehs_distributions(x)
         
         self._turn_ehs_distributions, ehs_sm = multiprocess_ehs_calc(
             iter(self.turn),
@@ -163,7 +163,7 @@ class CardInfoLutBuilder(CardCombos):
 
         def batch_tasker(batch, cursor, result):
             for i, x in enumerate(batch):
-                result[cursor] = (
+                result[cursor + i] = (
                     self.process_flop_potential_aware_distributions(x)
                 )
         
