@@ -2,7 +2,7 @@ import logging
 import time
 import math
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import joblib
 import numpy as np
@@ -125,7 +125,7 @@ class CardInfoLutBuilder(CardCombos):
             river_ehs_sm.close()
             river_ehs_sm.unlink()
         self.load_river()
-        return self.create_card_lookup(self._river_clusters, self.river)
+        return self.create_card_lookup(self._river_clusters, self.river, river_size)
 
     def _compute_turn_clusters(self, n_turn_clusters: int):
         """Compute turn clusters and create lookup table."""
@@ -412,7 +412,11 @@ class CardInfoLutBuilder(CardCombos):
         return centroids, y_km
 
     @staticmethod
-    def create_card_lookup(clusters: np.ndarray, card_combos: np.ndarray) -> Dict:
+    def create_card_lookup(
+        clusters: np.ndarray,
+        card_combos: np.ndarray,
+        card_combos_size: Optional[int] = None,
+    ) -> Dict:
         """
         Create lookup table.
 
@@ -430,6 +434,6 @@ class CardInfoLutBuilder(CardCombos):
         """
         log.info("Creating lookup table.")
         lossy_lookup = {}
-        for i, card_combo in enumerate(tqdm(card_combos, ascii=" >=")):
+        for i, card_combo in enumerate(tqdm(card_combos, ascii=" >=", total=card_combos_size)):
             lossy_lookup[tuple(card_combo)] = clusters[i]
         return lossy_lookup
