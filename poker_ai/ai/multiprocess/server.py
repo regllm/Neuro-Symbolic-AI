@@ -13,7 +13,8 @@ from poker_ai.games.short_deck import state
 from poker_ai.ai.multiprocess.worker import Worker
 
 log = logging.getLogger("sync.server")
-manager = mp.Manager()
+# manager = mp.Manager()
+manager = None
 
 
 class Server:
