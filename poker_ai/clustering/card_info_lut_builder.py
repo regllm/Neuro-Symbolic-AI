@@ -76,7 +76,6 @@ class CardInfoLutBuilder(CardCombos):
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
         if "river" not in self.card_info_lut:
-            self.load_river()
             self.card_info_lut["river"] = self._compute_river_clusters(
                 n_river_clusters,
             )
@@ -99,6 +98,7 @@ class CardInfoLutBuilder(CardCombos):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
         start = time.time()
+        self.load_river()
         river_ehs_sm = None
         river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
         try:
@@ -112,9 +112,6 @@ class CardInfoLutBuilder(CardCombos):
             river_ehs, river_ehs_sm = multiprocess_ehs_calc(
                 self.river, batch_tasker, river_size
             )
-            print("RIVER EHS")
-            print(river_ehs)
-
             joblib.dump(river_ehs, self.ehs_river_path)
 
         self.centroids["river"], self._river_clusters = self.cluster(
@@ -127,6 +124,7 @@ class CardInfoLutBuilder(CardCombos):
         if river_ehs_sm is not None:
             river_ehs_sm.close()
             river_ehs_sm.unlink()
+        self.load_river()
         return self.create_card_lookup(self._river_clusters, self.river)
 
     def _compute_turn_clusters(self, n_turn_clusters: int):
