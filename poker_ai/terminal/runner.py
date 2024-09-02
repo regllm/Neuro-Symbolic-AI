@@ -68,13 +68,20 @@ def run_terminal_app(
     log = AsciiLogger(term)
     n_players: int = 6
     # n_players: int = 3
+    include_ranks = list(range(low_card_rank, high_card_rank + 1))
     if debug_quick_start:
-        state: ShortDeckPokerState = new_game(n_players, {}, load_card_lut=False)
+        state: ShortDeckPokerState = new_game(
+            n_players,
+            {},
+            load_card_lut=False,
+            include_ranks=include_ranks,
+        )
     else:
         state: ShortDeckPokerState = new_game(
             n_players,
             lut_path=lut_path,
-            pickle_dir=pickle_dir
+            pickle_dir=pickle_dir,
+            include_ranks=include_ranks,
         )
     n_table_rotations: int = 0
     selected_action_i: int = 0
