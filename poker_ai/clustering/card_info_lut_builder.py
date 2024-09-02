@@ -112,6 +112,8 @@ class CardInfoLutBuilder(CardCombos):
             river_ehs, river_ehs_sm = multiprocess_ehs_calc(
                 self.river, batch_tasker, river_size
             )
+            print("RIVER EHS")
+            print(river_ehs)
 
             joblib.dump(river_ehs, self.ehs_river_path)
 
