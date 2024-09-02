@@ -167,7 +167,7 @@ class CardInfoLutBuilder(CardCombos):
                     self.process_flop_potential_aware_distributions(x)
                 )
         
-        self._turn_ehs_distributions, ehs_sm = multiprocess_ehs_calc(
+        self._flop_potential_aware_distributions, ehs_sm = multiprocess_ehs_calc(
             iter(self.flop),
             batch_tasker,
             len(self.flop),
