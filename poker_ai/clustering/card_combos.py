@@ -55,8 +55,6 @@ class CardCombos:
         card_combos_river_csv_filename = f"card_combos_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
         self.card_combos_river_csv_path: Path = Path(save_dir) / card_combos_river_csv_filename
 
-        ehs_river_flat_filename = f"ehs_river_flat_{low_card_rank}_to_{high_card_rank}.joblib"
-        self.ehs_river_flat_path: Path = Path(save_dir) / ehs_river_flat_filename
         ehs_river_filename = f"ehs_river_{low_card_rank}_to_{high_card_rank}.joblib"
         self.ehs_river_path: Path = Path(save_dir) / ehs_river_filename
 
