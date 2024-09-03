@@ -46,8 +46,8 @@ import collections
 import json
 import random
 from typing import Any, Dict
-import logging
 
+import click
 import joblib
 import numpy as np
 from tqdm import tqdm, trange
@@ -58,13 +58,15 @@ from pluribus.games.short_deck.state import ShortDeckPokerState
 from pluribus.poker.pot import Pot
 
 
-log = False
+# Define globally for now, but will need to update this to be passed around
+# soon as this is a bit dodge...
+sigma, regret, strategy = {}, {}, {}
 
 
 # TODO: In general, wondering how important this function is if we are to use
 # the blueprint algo for more than the preflop round? Would using just sigma
 # allow for a more complete rendering of strategies for infosets?
-def update_strategy(state: ShortDeckPokerState, i: int):
+def update_strategy(state: ShortDeckPokerState, i: int, t: int):
     """
 
     :param state: the game state
@@ -86,7 +88,7 @@ def update_strategy(state: ShortDeckPokerState, i: int):
     #               happen at the appropriate times.
     # elif h is chance_node:
     #   sample action from strategy for h
-    #   update_strategy(rs, h + a, i)
+    #   update_strategy(rs, h + a, i, t)
     elif ph == i:
         I = state.info_set
         # calculate regret
@@ -106,14 +108,14 @@ def update_strategy(state: ShortDeckPokerState, i: int):
         # so strategy is counts based on sigma, this takes into account the
         # reach probability so there is no need to pass around that pi guy..
         new_state: ShortDeckPokerState = state.apply_action(a)
-        update_strategy(new_state, i)
+        update_strategy(new_state, i, t)
     else:
         # Traverse each action.
         for a in state.legal_actions:
             # not actually updating the strategy for p_i != i, only one i at a
             # time
             new_state: ShortDeckPokerState = state.apply_action(a)
-            update_strategy(new_state, i)
+            update_strategy(new_state, i, t)
 
 
 def calculate_strategy(
@@ -150,7 +152,7 @@ def cfr(state: ShortDeckPokerState, i: int, t: int) -> float:
     ph = state.player_i
 
     if state.is_terminal:
-        return state.payout[i]
+        return state.payout[i] * (1 if i == 1 else -1)
     # NOTE(fedden): The logic in Algorithm 1 in the supplementary material
     #               instructs the following lines of logic, but state class
     #               will already skip to the next in-hand player.
@@ -211,7 +213,7 @@ def cfrp(state: ShortDeckPokerState, i: int, t: int):
     ph = state.player_i
 
     if state.is_terminal:
-        return state.payout[i]
+        return state.payout[i] * (1 if i == 1 else -1)
     # NOTE(fedden): The logic in Algorithm 1 in the supplementary material
     #               instructs the following lines of logic, but state class
     #               will already skip to the next in-hand player.
@@ -297,7 +299,30 @@ def to_dict(**kwargs) -> Dict[str, Any]:
     return json.loads(json.dumps(copy.deepcopy(kwargs)))
 
 
-if __name__ == "__main__":
+@click.command()
+@click.option("--strategy_interval", default=10, help=".")
+@click.option("--n_iterations", default=20000, help=".")
+@click.option("--lcfr_threshold", default=80, help=".")
+@click.option("--discount_interval", default=10, help=".")
+@click.option("--prune_threshold", default=40, help=".")
+@click.option("--C", default=-20000, help=".")
+@click.option("--n_players", default=3, help=".")
+@click.option("--print_iteration", default=10, help=".")
+@click.option("--dump_iteration", default=10, help=".")
+@click.option("--update_threshold", default=50, help=".")
+def train(
+    strategy_interval: int,
+    n_iterations: int,
+    lcfr_threshold: int,
+    discount_interval: int,
+    prune_threshold: int,
+    C: int,
+    n_players: int,
+    print_iteration: int,
+    dump_iteration: int,
+    update_threshold: int,
+):
+    """Train agent."""
     utils.random.seed(42)
     # TODO(fedden): Note from the supplementary material, the data here will
     #               need to be lower precision: "To save memory, regrets were
@@ -311,21 +336,8 @@ if __name__ == "__main__":
     sigma = collections.defaultdict(
         lambda: collections.defaultdict(lambda: collections.defaultdict(lambda: 1 / 3))
     )
-    # algorithm constants
-    strategy_interval = 10 # it's just to test.
-    n_iterations = 200
-    LCFR_threshold = 80
-    discount_interval = 10
-    prune_threshold = 40
-    C = -20000  # somewhat arbitrary
-    n_players = 3
-    print_iteration = 10
-    dump_iteration = 10
-    update_threshold = 50  # 800 minutes in Pluribus
-
     # algorithm presented here, pg.16:
     # https://science.sciencemag.org/content/sci/suppl/2019/07/10/science.aay2400.DC1/aay2400-Brown-SM.pdf
-    logging.info("beginning training")
     info_set_lut = {}
     for t in trange(1, n_iterations + 1, desc="train iter"):
         sigma[t + 1] = copy.deepcopy(sigma[t])
@@ -335,7 +347,7 @@ if __name__ == "__main__":
             info_set_lut = state.info_set_lut
             if t > update_threshold and t % strategy_interval == 0:
                 # Only start updating after 800 minutes in Pluribus
-                update_strategy(state, i)
+                update_strategy(state, i, t)
             if t > prune_threshold:
                 if random.uniform(0, 1) < 0.05:
                     cfr(state, i, t)
@@ -343,7 +355,7 @@ if __name__ == "__main__":
                     cfrp(state, i, t)
             else:
                 cfr(state, i, t)
-        if t < LCFR_threshold & t % discount_interval == 0:
+        if t < lcfr_threshold & t % discount_interval == 0:
             # TODO(fedden): Is discount_interval actually set/managed in
             #               minutes here? In Algorithm 1 this should be managed
             #               in minutes using perhaps the time module, but here
@@ -370,3 +382,7 @@ if __name__ == "__main__":
     to_persist = to_dict(strategy=strategy, regret=regret, sigma=sigma)
     joblib.dump(to_persist, "strategy.gz", compress="gzip")
     print_strategy(strategy)
+
+
+if __name__ == "__main__":
+    train()
