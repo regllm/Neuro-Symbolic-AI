@@ -82,6 +82,8 @@ class Card:
     def to_pretty(self):
         icon = self._suit_to_icon(self.suit)
         rank = self._rank_to_pretty_str(EvaluationCard.get_rank_int(self._eval_card) + 2)
+        if len(rank) < 2:
+            rank = " " + rank
         return f"[{icon}{rank}]"
 
     def to_pair(self):
