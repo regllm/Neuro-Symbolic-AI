@@ -1,5 +1,5 @@
 fn get_int_rank(raw_rank: u8) -> i32 {
-    return (raw_rank as i32) - 2;
+    (raw_rank as i32) - 2
 }
 
 fn get_int_suit(suit: char) -> i32 {
@@ -40,5 +40,5 @@ pub fn new(raw_rank: u8, char_suit: char) -> i32 {
     let suit = int_suit << 12;
     let rank = (int_rank as i32) << 8;
 
-    return bit_rank | suit | rank | prime_rank;
+    bit_rank | suit | rank | prime_rank
 }
