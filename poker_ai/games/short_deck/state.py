@@ -47,13 +47,11 @@ def new_game(
         for player_i in range(n_players)
     ]
     if card_info_lut:
-        # Don't reload massive files, it takes ages.
         state = ShortDeckPokerState(
             players=players,
-            load_card_lut=False,
+            card_info_lut=card_info_lut,
             **kwargs
         )
-        state.card_info_lut = card_info_lut
     else:
         # Load massive files.
         state = ShortDeckPokerState(
@@ -79,6 +77,7 @@ class ShortDeckPokerState:
         pickle_dir: bool = False,
         load_card_lut: bool = True,
         include_ranks: List[int] = None,
+        card_info_lut: Optional[Dict[str, Any]] = None,
     ):
         """Initialise state."""
         n_players = len(players)
@@ -91,11 +90,14 @@ class ShortDeckPokerState:
         # Store low and high card rank in the instance.
         self._low_card_rank = min(include_ranks)
         self._high_card_rank = max(include_ranks)
-        if load_card_lut:
+        if card_info_lut is not None:
+            self.card_info_lut = card_info_lut
+        elif load_card_lut:
             self.card_info_lut = self.load_card_lut(
                 lut_path, self._pickle_dir, self._low_card_rank, self._high_card_rank
             )
         else:
+            logger.warning("Initializing a PokerState without a lookup table.")
             self.card_info_lut = {}
         # Get a reference of the pot from the first player.
         self._table = PokerTable(
@@ -407,12 +409,16 @@ class ShortDeckPokerState:
         )
         
         lookup_cards = tuple([card.eval_card for card in cards])
-        try:
-            cards_cluster = self.card_info_lut[self._betting_stage][lookup_cards]
-        except KeyError:
-            if self.betting_stage not in {"terminal", "show_down"}:
-                raise ValueError("You should have these cards in your lut.")
-            return "default info set, please ensure you load it correctly"
+        if self.card_info_lut != {}:
+            try:
+                cards_cluster = self.card_info_lut[self._betting_stage][lookup_cards]
+            except KeyError:
+                if self.betting_stage not in {"terminal", "show_down"}:
+                    raise ValueError("You should have these cards in your lut.")
+                return "default info set, please ensure you load it correctly"
+        else:
+            cards_cluster = 1
+
         # Convert history from a dict of lists to a list of dicts as I'm
         # paranoid about JSON's lack of care with insertion order.
         info_set_dict = {
