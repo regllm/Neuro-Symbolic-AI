@@ -74,6 +74,20 @@ class LookupTable(object):
         # we reuse some of the bit sequences
         self.flushes()
         self.multiples()
+    
+    def save_as_json(self, file_path):
+        """
+        Save lookup tables
+        """
+
+        import json
+        f = open(file_path, "w")
+        json.dump({
+            "flush": self.flush_lookup,
+            "unsuited": self.unsuited_lookup,
+        }, f)
+        f.close()
+
 
     def flushes(self):
         """
@@ -282,3 +296,9 @@ class LookupTable(object):
             t = (next | (next - 1)) + 1
             next = t | ((((t & -t) // (next & -next)) >> 1) - 1)
             yield next
+
+if __name__ == "__main__":
+    import sys
+    sys.path.append(".")
+    table = LookupTable()
+    table.save_as_json("./lookup.json")   
