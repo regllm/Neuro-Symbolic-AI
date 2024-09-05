@@ -54,7 +54,7 @@ pub fn simulate_river_hand_strengths(
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(river_combos_size as u64);
-    progress.set_style(style.clone());
+    progress.set_style(style);
 
     for river_combo in river_combos {
         result.push(
@@ -75,8 +75,8 @@ pub fn simulate_river_hand_strengths(
 fn simulate_turn_ehs_distributions(
     deck: &Vec<i32>,
     turn_combo: &Vec<i32>,
-    river_centroids: &Vec<Vec<f64>>,
     lookup: &card::LookupTable,
+    river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
@@ -139,6 +139,7 @@ fn simulate_turn_ehs_distributions(
                 min_dist = dist;
             }
         }
+        // now increment the cluster to which it belongs -
         result[min_centroid_index] += prob_unit;
     }
 
@@ -149,6 +150,7 @@ pub fn simulate_turn_hand_strengths(
     deck: &Vec<i32>,
     turn_combos: &Vec<Vec<i32>>,
     lookup: &card::LookupTable,
+    river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
@@ -158,16 +160,128 @@ pub fn simulate_turn_hand_strengths(
 
     let mut result: Vec<Vec<f64>> = Vec::with_capacity(turn_combos_size);
 
+    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
+    let progress = ProgressBar::new(turn_combos_size as u64);
+    progress.set_style(style);
+
     for turn_combo in turn_combos {
         result.push(
-            simulate_river_games(
+            simulate_turn_ehs_distributions(
                 deck,
                 &turn_combo,
                 lookup,
+                river_centroids,
                 river_simulation_count,
+                turn_simulation_count,
+                river_cluster_count,
             )
-        )
+        );
+        progress.inc(1);
     }
+    progress.finish();
+
+    result
+}
+
+fn simulate_flop_potential_aware_distributions(
+    deck: &Vec<i32>,
+    flop_combo: &Vec<i32>,
+    lookup: &card::LookupTable,
+    river_centroids: &Vec<Vec<f64>>,
+    turn_centroids: &Vec<Vec<f64>>,
+    river_simulation_count: u32,
+    turn_simulation_count: u32,
+    flop_simulation_count: u32,
+    river_cluster_count: u32,
+    turn_cluster_count: u32,
+) -> Vec<f64> {
+    let mut available_cards: Vec<&i32> = deck.iter()
+        .filter(|&x| !flop_combo.contains(x))
+        .collect();
+    let available_cards_count = available_cards.len();
+    
+    let prob_unit = 1.0 / f64::from(flop_simulation_count);
+
+    let mut augmented_turn_combo: Vec<i32> = flop_combo.to_vec();
+    augmented_turn_combo.push(0);
+
+    let mut result: Vec<f64> = Vec::with_capacity(turn_cluster_count as usize);
+    for _i in 0..turn_cluster_count {
+        result.push(0.0);
+    }
+
+    let mut rng = rand::thread_rng();
+    for _i in 0..flop_simulation_count {
+        // Randomly generating a Turn card.
+        let r = shuffle::get_random_index(&mut rng, available_cards_count);
+        augmented_turn_combo[5] = *available_cards[r];
+
+        let turn_ehs_distribution = simulate_turn_ehs_distributions(
+            deck,
+            &augmented_turn_combo,
+            lookup,
+            river_centroids,
+            river_simulation_count,
+            turn_simulation_count,
+            river_cluster_count,
+        );
+
+        let mut min_centroid_index: usize = 0;
+        let mut min_dist: f64 = -1.0;
+        for (j, turn_centroid) in turn_centroids.iter().enumerate() {
+            let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
+            if min_dist < 0.0 {
+                min_dist = dist;
+            } else if dist < min_dist {
+                min_centroid_index = j;
+                min_dist = dist;
+            }
+        }
+        result[min_centroid_index] += prob_unit;
+    }
+
+    result
+}
+
+pub fn simulate_flop_hand_strengths(
+    deck: &Vec<i32>,
+    flop_combos: &Vec<Vec<i32>>,
+    lookup: &card::LookupTable,
+    river_centroids: &Vec<Vec<f64>>,
+    turn_centroids: &Vec<Vec<f64>>,
+    river_simulation_count: u32,
+    turn_simulation_count: u32,
+    flop_simulation_count: u32,
+    river_cluster_count: u32,
+    turn_cluster_count: u32,
+) -> Vec<Vec<f64>> {
+    let flop_combos_size = flop_combos.len();
+    let result_width = river_cluster_count;
+
+    let mut result: Vec<Vec<f64>> = Vec::with_capacity(flop_combos_size);
+
+    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
+    let progress = ProgressBar::new(flop_combos_size as u64);
+    progress.set_style(style);
+
+    for flop_combo in flop_combos {
+        result.push(
+            simulate_flop_potential_aware_distributions(
+                deck,
+                &flop_combo,
+                lookup,
+                river_centroids,
+                turn_centroids,
+                river_simulation_count,
+                turn_simulation_count,
+                flop_simulation_count,
+                river_cluster_count,
+                turn_cluster_count,
+            )
+        );
+        progress.inc(1);
+    }
+    progress.finish();
 
     result
 }
