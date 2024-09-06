@@ -7,14 +7,12 @@ edition = "2021"
 
 [dependencies]
 approx = "0.5.1"
+ckmeans = { git = "https://github.com/tanker-fund/rust-ckmeans.git", tag = "v0.1.1" }
 emd = { git = "https://github.com/tanker-fund/rust-emd.git", tag = "v0.2.0" }
 generator = "0.7.5"
 indicatif = "0.17.7"
 itertools = "0.12.1"
 lazy_static = "1.4"
-linfa = "0.7.0"
-linfa-clustering = "0.7.0"
-linfa-datasets = "0.7.0"
 ndarray = "0.15.6"
 ndarray-rand = "0.14.0"
 rand = "0.8.5"
