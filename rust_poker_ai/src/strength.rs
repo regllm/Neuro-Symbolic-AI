@@ -133,11 +133,11 @@ fn simulate_turn_ehs_distributions(
             let base_rank = card::evaluate(&base_combo, lookup);
             let another_rank = card::evaluate(&another_combo, lookup);
             if base_rank > another_rank {
-                ehs[0] += prob_unit;
+                ehs[0] += sub_prob_unit;
             } else if base_rank < another_rank {
-                ehs[1] += prob_unit;
+                ehs[1] += sub_prob_unit;
             } else {
-                ehs[2] += prob_unit;
+                ehs[2] += sub_prob_unit;
             }
         }
 
