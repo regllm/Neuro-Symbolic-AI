@@ -2,8 +2,17 @@ use crate::card;
 use crate::distance;
 use crate::shuffle;
 use indicatif::{ProgressBar, ProgressStyle};
-use rand::seq::SliceRandom;
+use itertools::Itertools;
+use rayon::prelude::*;
+use std::cmp;
+use std::thread::available_parallelism;
 
+
+fn calc_chunk_size(total: usize) -> usize {
+    let process_count = available_parallelism().unwrap().get();
+    let chunk_size = cmp::min((total as f64 / process_count as f64).ceil() as usize, 10000 as usize);
+    chunk_size
+}
 
 fn simulate_river_games(
     deck: &Vec<i32>,
@@ -56,16 +65,22 @@ pub fn simulate_river_hand_strengths(
     let progress = ProgressBar::new(river_combos_size as u64);
     progress.set_style(style);
 
-    for river_combo in river_combos {
-        result.push(
-            simulate_river_games(
-                deck,
-                &river_combo,
-                lookup,
-                river_simulation_count,
-            )
-        );
-        progress.inc(1);
+    let chunk_size = calc_chunk_size(river_combos_size);
+    for chunk in &river_combos.into_iter().chunks(chunk_size) {
+        let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+            .map(|river_combo| {
+                simulate_river_games(
+                    deck,
+                    &river_combo,
+                    lookup,
+                    river_simulation_count,
+                )
+            })
+            .collect();
+        let chunk_size = chunk_result.len() as u64;
+        result.extend(chunk_result);
+        progress.inc(chunk_size);
     }
     progress.finish();
 
@@ -164,19 +179,25 @@ pub fn simulate_turn_hand_strengths(
     let progress = ProgressBar::new(turn_combos_size as u64);
     progress.set_style(style);
 
-    for turn_combo in turn_combos {
-        result.push(
-            simulate_turn_ehs_distributions(
-                deck,
-                &turn_combo,
-                lookup,
-                river_centroids,
-                river_simulation_count,
-                turn_simulation_count,
-                river_cluster_count,
-            )
-        );
-        progress.inc(1);
+    let chunk_size = calc_chunk_size(turn_combos_size);
+    for chunk in &turn_combos.into_iter().chunks(chunk_size) {
+        let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+            .map(|turn_combo| {
+                simulate_turn_ehs_distributions(
+                    deck,
+                    &turn_combo,
+                    lookup,
+                    river_centroids,
+                    river_simulation_count,
+                    turn_simulation_count,
+                    river_cluster_count,
+                )
+            })
+            .collect();
+        let chunk_size = chunk_result.len() as u64;
+        result.extend(chunk_result);
+        progress.inc(chunk_size);
     }
     progress.finish();
 
@@ -264,22 +285,28 @@ pub fn simulate_flop_hand_strengths(
     let progress = ProgressBar::new(flop_combos_size as u64);
     progress.set_style(style);
 
-    for flop_combo in flop_combos {
-        result.push(
-            simulate_flop_potential_aware_distributions(
-                deck,
-                &flop_combo,
-                lookup,
-                river_centroids,
-                turn_centroids,
-                river_simulation_count,
-                turn_simulation_count,
-                flop_simulation_count,
-                river_cluster_count,
-                turn_cluster_count,
-            )
-        );
-        progress.inc(1);
+    let chunk_size = calc_chunk_size(flop_combos_size);
+    for chunk in &flop_combos.into_iter().chunks(chunk_size) {
+        let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+            .map(|flop_combo| {
+                simulate_flop_potential_aware_distributions(
+                    deck,
+                    &flop_combo,
+                    lookup,
+                    river_centroids,
+                    turn_centroids,
+                    river_simulation_count,
+                    turn_simulation_count,
+                    flop_simulation_count,
+                    river_cluster_count,
+                    turn_cluster_count,
+                )
+            })
+            .collect();
+        let chunk_size = chunk_result.len() as u64;
+        result.extend(chunk_result);
+        progress.inc(chunk_size);
     }
     progress.finish();
 

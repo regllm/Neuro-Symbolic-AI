@@ -9,8 +9,8 @@ mod strength;
 
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::{Instant, Duration};
-use std::fs::File;
-use std::io::{self, Write};
+use std::fs::{File, metadata};
+use std::io::{Write, BufReader, BufRead};
 
 
 const FLOP_SIMULATION_COUNT: u32 = 6;
@@ -20,6 +20,34 @@ const FLOP_CLUSTER_COUNT: u32 = 50;
 const TURN_CLUSTER_COUNT: u32 = 50;
 const RIVER_CLUSTER_COUNT: u32 = 50;
 
+
+fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
+    let mut file = File::open(file_path).unwrap();
+    let mut reader = BufReader::new(file);
+    let line_count = reader.lines().count();
+
+    file = File::open(file_path).unwrap();
+    reader = BufReader::new(file);
+
+    let mut result: Vec<Vec<f64>> = Vec::with_capacity(line_count);
+
+    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
+    let progress = ProgressBar::new(line_count as u64);
+    progress.set_style(style);
+
+    for line in reader.lines() {
+        let line = line.unwrap();
+        let values: Vec<f64> = line
+            .split(',')
+            .filter_map(|s| s.trim().parse().ok())
+            .collect();
+        result.push(values);
+        progress.inc(1);
+    }
+    progress.finish();
+
+    result
+}
 
 fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
@@ -36,7 +64,6 @@ fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
     progress.finish();
 }
 
-
 fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(centroids.len() as u64);
@@ -52,7 +79,6 @@ fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
     progress.finish();
 }
 
-
 fn save_clusters(clusters: &Vec<u32>, file_path: &str) {
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(clusters.len() as u64);
@@ -66,7 +92,6 @@ fn save_clusters(clusters: &Vec<u32>, file_path: &str) {
 
     progress.finish();
 }
-
 
 fn build_river_lut(
     deck: &Vec<i32>,
@@ -248,29 +273,44 @@ fn build_flop_lut(
 
 
 fn build_lut() {
-    // let deck = combo::create_deck(2, 4);
-    let deck = combo::create_deck(2, 14);
+    let deck = combo::create_deck(2, 4);
+    // let deck = combo::create_deck(2, 14);
     let start_combos = combo::create_card_combos(&deck, 2);
     let lookup = card::load_lookup("./assets/lookup.json");
 
-    let (river_centroids, river_clusters) = build_river_lut(
-        &deck,
-        &start_combos,
-        &lookup,
-    );
-    let (turn_centroids, turn_clusters) = build_turn_lut(
-        &deck,
-        &start_combos,
-        &lookup,
-        &river_centroids,
-    );
-    let (flop_centroids, flop_clusters) = build_flop_lut(
-        &deck,
-        &start_combos,
-        &lookup,
-        &river_centroids,
-        &turn_centroids,
-    );
+    let (river_centroids, turn_centroids);
+    if metadata("./output/river_centroids.txt").is_ok() {
+        println!("Loading River centroids.");
+        river_centroids = load_centroids("./output/river_centroids.txt");
+    } else {
+        let (centroids, _river_clusters) = build_river_lut(
+            &deck,
+            &start_combos,
+            &lookup,
+        );
+        river_centroids = centroids;
+    }
+    if metadata("./output/turn_centroids.txt").is_ok() {
+        println!("Loading Turn centroids.");
+        turn_centroids = load_centroids("./output/turn_centroids.txt");
+    } else {
+        let (centroids, _turn_clusters) = build_turn_lut(
+            &deck,
+            &start_combos,
+            &lookup,
+            &river_centroids,
+        );
+        turn_centroids = centroids;
+    }
+    if !metadata("./output/flop_centroids.txt").is_ok() {
+        let (_flop_centroids, _flop_clusters) = build_flop_lut(
+            &deck,
+            &start_combos,
+            &lookup,
+            &river_centroids,
+            &turn_centroids,
+        );
+    }
 }
 
 
