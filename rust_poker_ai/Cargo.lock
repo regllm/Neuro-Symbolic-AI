@@ -31,8 +31,8 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ckmeans"
-version = "0.1.1"
-source = "git+https://github.com/tanker-fund/rust-ckmeans.git?tag=v0.1.1#3893c4b7027f2008b59000f80deaade179d98013"
+version = "0.1.2"
+source = "git+https://github.com/tanker-fund/rust-ckmeans.git?tag=v0.1.2#068d22d5c44dacb67b90eeaa32b614e9ca4d15ac"
 dependencies = [
  "cc",
  "libc",

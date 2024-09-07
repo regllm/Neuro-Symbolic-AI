@@ -8,7 +8,7 @@ mod strength;
 // mod test;
 
 use indicatif::{ProgressBar, ProgressStyle};
-use std::time::{Instant, Duration};
+use std::time::{Instant};
 use std::fs::{File, metadata};
 use std::io::{Write, BufReader, BufRead};
 

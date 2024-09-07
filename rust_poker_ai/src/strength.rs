@@ -56,7 +56,6 @@ pub fn simulate_river_hand_strengths(
     river_simulation_count: u32,
 ) -> Vec<Vec<f64>> {
     let river_combos_size = river_combos.len();
-    let result_width = 3;
 
     let mut result: Vec<Vec<f64>> =
         Vec::with_capacity(river_combos_size);
@@ -96,7 +95,7 @@ fn simulate_turn_ehs_distributions(
     turn_simulation_count: u32,
     river_cluster_count: u32,
 ) -> Vec<f64> {
-    let mut available_cards: Vec<&i32> = deck.iter()
+    let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !turn_combo.contains(x))
         .collect();
     let available_cards_count = available_cards.len();
@@ -171,7 +170,7 @@ pub fn simulate_turn_hand_strengths(
     river_cluster_count: u32,
 ) -> Vec<Vec<f64>> {
     let turn_combos_size = turn_combos.len();
-    let result_width = river_cluster_count;
+    // let result_width = river_cluster_count;
 
     let mut result: Vec<Vec<f64>> = Vec::with_capacity(turn_combos_size);
 
@@ -216,7 +215,7 @@ fn simulate_flop_potential_aware_distributions(
     river_cluster_count: u32,
     turn_cluster_count: u32,
 ) -> Vec<f64> {
-    let mut available_cards: Vec<&i32> = deck.iter()
+    let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !flop_combo.contains(x))
         .collect();
     let available_cards_count = available_cards.len();
@@ -277,7 +276,7 @@ pub fn simulate_flop_hand_strengths(
     turn_cluster_count: u32,
 ) -> Vec<Vec<f64>> {
     let flop_combos_size = flop_combos.len();
-    let result_width = river_cluster_count;
+    // let result_width = river_cluster_count;
 
     let mut result: Vec<Vec<f64>> = Vec::with_capacity(flop_combos_size);
 
