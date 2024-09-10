@@ -16,9 +16,12 @@ use std::io::{Write, BufReader, BufRead};
 const FLOP_SIMULATION_COUNT: u32 = 6;
 const TURN_SIMULATION_COUNT: u32 = 6;
 const RIVER_SIMULATION_COUNT: u32 = 6;
+// const FLOP_CLUSTER_COUNT: u32 = 50;
+// const TURN_CLUSTER_COUNT: u32 = 50;
+// const RIVER_CLUSTER_COUNT: u32 = 50;
 const FLOP_CLUSTER_COUNT: u32 = 50;
-const TURN_CLUSTER_COUNT: u32 = 50;
-const RIVER_CLUSTER_COUNT: u32 = 50;
+const TURN_CLUSTER_COUNT: u32 = 30;
+const RIVER_CLUSTER_COUNT: u32 = 3;
 
 
 fn create_progress_style() -> ProgressStyle {
