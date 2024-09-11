@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 approx = "0.5.1"
-ckmeans = { git = "https://github.com/tanker-fund/rust-ckmeans.git", tag = "v0.1.4" }
+ckmeans = { git = "https://github.com/tanker-fund/rust-ckmeans.git", tag = "v0.1.3" }
 clap = { version = "4.5.2", features = ["derive"] }
 emd = { git = "https://github.com/tanker-fund/rust-emd.git", tag = "v0.2.0" }
 generator = "0.7.5"
