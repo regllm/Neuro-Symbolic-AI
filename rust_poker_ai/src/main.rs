@@ -1,14 +1,16 @@
+mod args;
 mod card;
 mod cluster;
 mod combo;
 mod distance;
+mod exp;
 mod math;
+mod progress;
 mod shuffle;
 mod strength;
-// mod test;
+mod table_server;
 
-use clap::Parser;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar};
 use std::time::{Instant};
 use std::fs::{File, metadata};
 use std::io::{Write, BufReader, BufRead};
@@ -24,18 +26,6 @@ const TURN_CLUSTER_COUNT_LIMIT: u32 = 3;
 const RIVER_CLUSTER_COUNT_LIMIT: u32 = 3;
 
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Use short deck for quick tests
-    #[arg(short, long, default_value_t = false)]
-    short: bool,
-}
-
-fn create_progress_style() -> ProgressStyle {
-    ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap()
-}
-
 fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
     let mut file = File::open(file_path).unwrap();
     let mut reader = BufReader::new(file);
@@ -47,7 +37,7 @@ fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
     let mut result: Vec<Vec<f64>> = Vec::with_capacity(line_count);
 
     let progress = ProgressBar::new(line_count as u64);
-    progress.set_style(create_progress_style());
+    progress.set_style(progress::create_progress_style());
 
     for line in reader.lines() {
         let line = line.unwrap();
@@ -65,7 +55,7 @@ fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
 
 fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
     let progress = ProgressBar::new(combos.len() as u64);
-    progress.set_style(create_progress_style());
+    progress.set_style(progress::create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in combos.iter() {
@@ -79,7 +69,7 @@ fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
 
 fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
     let progress = ProgressBar::new(centroids.len() as u64);
-    progress.set_style(create_progress_style());
+    progress.set_style(progress::create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in centroids.iter() {
@@ -93,7 +83,7 @@ fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
 
 fn save_clusters(clusters: &Vec<u32>, file_path: &str) {
     let progress = ProgressBar::new(clusters.len() as u64);
-    progress.set_style(create_progress_style());
+    progress.set_style(progress::create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in clusters.iter() {
@@ -318,7 +308,7 @@ fn build_flop_lut(
 
 
 fn build_lut() {
-    let args = Args::parse();
+    let args = args::get_args();
 
     let min_rank = 2;
     let max_rank = if args.short { 5 } else { 14 };
@@ -363,6 +353,13 @@ fn build_lut() {
 
 
 fn main() {
-    // test::test();
-    build_lut();
+    let args = args::get_args();
+
+    if args.exp {
+        exp::exp();
+    } else if args.table {
+        table_server::run_server();
+    } else {
+        build_lut();
+    }
 }
