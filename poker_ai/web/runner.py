@@ -147,7 +147,7 @@ def run_web_app(
 
     if not debug_quick_start:
         strategy = load_strategy(strategy_path)
-        lut = load_lut(lut_path)
+        lut = load_lut(lut_path, low_card_rank, high_card_rank)
     else:
         strategy = None
         lut = None
