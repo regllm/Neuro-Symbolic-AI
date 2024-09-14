@@ -47,7 +47,7 @@ def player_to_dict(player, name, hidden=True):
     }
 
 
-def state_to_str(state, names, client_player_name):
+def state_to_str(state, players, names, client_player_name):
     lines = []
     lines.append("[TABLE] " + "".join([card.to_pretty() for card in state.community_cards]))
     lines.append(f"[POT] {state._table.pot.total}")
@@ -58,9 +58,9 @@ def state_to_str(state, names, client_player_name):
         lines.append(player_to_str(player, name, hidden=hidden))
     return "\n".join(lines)
 
-def state_to_dict(state, names, client_player_name):
+def state_to_dict(state, players, names, client_player_name):
     players = []
-    for player, name in zip(state.players, names):
+    for player, name in zip(players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
         players.append(player_to_dict(player, name, hidden=hidden))
@@ -71,7 +71,7 @@ def state_to_dict(state, names, client_player_name):
         "is_terminal": state.is_terminal,
         "is_waiting": is_waiting(state, client_player_name),
         "actions": get_available_actions(state),
-        "text": state_to_str(state, names, client_player_name),
+        "text": state_to_str(state, players, names, client_player_name),
     }
 
 
@@ -208,7 +208,7 @@ class PokerDemo:
         self._apply_action(action)
 
     def to_dict(self):
-        return state_to_dict(self.state, self.names, self.client_player_name)
+        return state_to_dict(self.state, self.players, self.names, self.client_player_name)
 
     def read_events(self):
         event_dicts = []
