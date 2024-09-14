@@ -11,6 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import joblib
 
 from poker_ai import utils
+from poker_ai.clustering.lookup_client import LookupClient
 from poker_ai.poker.card import Card
 from poker_ai.poker.engine import PokerEngine
 from poker_ai.games.short_deck.player import ShortDeckPokerPlayer
@@ -259,7 +260,7 @@ class ShortDeckPokerState:
         Parameters
         ----------
         lut_path : str
-            Path to lookupkup table.
+            Path to lookup table.
         pickle_dir : bool
             Whether the lut_path is a path to pickle files or not. Pickle files
             are deprecated for the lut.
@@ -288,6 +289,14 @@ class ShortDeckPokerState:
                     )
                 with open(file_path, "rb") as fp:
                     card_info_lut[betting_stage] = joblib.load(fp)
+        elif lut_path and lut_path.startswith("lut://"):
+            logger.info(f"Connecting to a card information lut server: {lut_path}")
+            card_info_lut = LookupClient(
+                lut_path,
+                low_card_rank=low_card_rank,
+                high_card_rank=high_card_rank,
+            )
+            card_info_lut.connect()
         elif lut_path:
             logger.info(f"Loading card from single file at path: {lut_path}")
             filename = f"card_info_lut_{low_card_rank}_to_{high_card_rank}.joblib"

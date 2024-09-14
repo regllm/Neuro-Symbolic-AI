@@ -49,7 +49,7 @@ from poker_ai.poker.evaluation.eval_card import EvaluationCard
 #         return 14 if suited else 24
 
 
-def make_starting_hand_lossless(starting_hand, short_deck) -> int:
+def make_starting_hand_lossless(starting_hand, short_deck=None) -> int:
     """"""
     ranks = set()
     suits = set()
