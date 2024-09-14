@@ -52,7 +52,7 @@ def state_to_str(state, players, names, client_player_name):
     lines.append("[TABLE] " + "".join([card.to_pretty() for card in state.community_cards]))
     lines.append(f"[POT] {state._table.pot.total}")
     lines.append("----------------")
-    for player, name in zip(state.players, names):
+    for player, name in zip(players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
         lines.append(player_to_str(player, name, hidden=hidden))
