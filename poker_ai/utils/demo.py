@@ -1,11 +1,14 @@
+import logging
 import random
 
 import numpy as np
 import joblib
 
 from poker_ai.clustering.lookup_client import LookupClient
-from poker_ai.games.short_deck.state import new_game, ShortDeckPokerState
+from poker_ai.games.short_deck.state import new_game
 from poker_ai.utils.algos import rotate_list
+
+logger = logging.getLogger("poker_ai.utils.demo")
 
 
 def player_to_str(player, name, hidden=True):

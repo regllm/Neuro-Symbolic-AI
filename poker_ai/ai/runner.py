@@ -177,7 +177,7 @@ def resume(server_config_path: str):
         "elect to not recusrively visit it and it's child nodes."
     ),
 )
-@click.option("--n_players", default=3, help="The number of players in the game.")
+@click.option("--n_players", default=6, help="The number of players in the game.")
 @click.option(
     "--dump_iteration",
     default=20,
