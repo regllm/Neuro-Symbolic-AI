@@ -1,8 +1,9 @@
 use emd::distance;
 use ndarray::Array1;
+use num_traits::Num;
 
 
-pub fn wasserstein(v1: &Vec<f64>, v2: &Vec<f64>) -> f64 {
+pub fn wasserstein<T: Num>(v1: &Vec<T>, v2: &Vec<T>) -> f64 {
     // Ensure both vectors have the same length
     assert_eq!(v1.len(), v2.len(), "Input vectors must have the same length");
 

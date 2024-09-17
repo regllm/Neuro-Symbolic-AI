@@ -19,15 +19,15 @@ fn simulate_river_games(
     river_combo: &Vec<i32>,
     lookup: &card::LookupTable,
     river_simulation_count: u32,
-) -> Vec<f64> {
+) -> Vec<u8> {
     let base_rank = card::evaluate(river_combo, lookup);
     let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !river_combo.contains(x))
         .collect();
     let available_cards_count = available_cards.len();
     
-    let prob_unit = 1.0 / f64::from(river_simulation_count);
-    let mut result: Vec<f64> = vec![0.0f64, 0.0f64, 0.0f64];
+    // let prob_unit = 1.0 / f64::from(river_simulation_count);
+    let mut result: Vec<u8> = vec![0, 0, 0];
 
     let mut another_combo: Vec<i32> = river_combo.to_vec();
     let mut rng = rand::thread_rng();
@@ -38,11 +38,11 @@ fn simulate_river_games(
 
         let another_rank = card::evaluate(&another_combo, lookup);
         if base_rank > another_rank {
-            result[0] += prob_unit;
+            result[0] += 1;
         } else if base_rank < another_rank {
-            result[1] += prob_unit;
+            result[1] += 1;
         } else {
-            result[2] += prob_unit;
+            result[2] += 1;
         }
     }
 
@@ -54,10 +54,10 @@ pub fn simulate_river_hand_strengths(
     river_combos: &Vec<Vec<i32>>,
     lookup: &card::LookupTable,
     river_simulation_count: u32,
-) -> Vec<Vec<f64>> {
+) -> Vec<Vec<u8>> {
     let river_combos_size = river_combos.len();
 
-    let mut result: Vec<Vec<f64>> =
+    let mut result: Vec<Vec<u8>> =
         Vec::with_capacity(river_combos_size);
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
@@ -67,7 +67,7 @@ pub fn simulate_river_hand_strengths(
     let chunk_size = calc_chunk_size(river_combos_size);
     for chunk in &river_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+        let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
             .map(|river_combo| {
                 simulate_river_games(
                     deck,
@@ -94,23 +94,23 @@ fn simulate_turn_ehs_distributions(
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
-) -> Vec<f64> {
+) -> Vec<u8> {
     let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !turn_combo.contains(x))
         .collect();
     let available_cards_count = available_cards.len();
     
-    let prob_unit = 1.0 / f64::from(river_simulation_count);
-    let sub_prob_unit = 1.0 / f64::from(turn_simulation_count);
-    let mut ehs: Vec<f64> = vec![0.0, 0.0, 0.0];
+    // let prob_unit = 1.0 / f64::from(river_simulation_count);
+    // let sub_prob_unit = 1.0 / f64::from(turn_simulation_count);
+    let mut ehs: Vec<u8> = vec![0, 0, 0];
 
     let mut base_combo: Vec<i32> = turn_combo.to_vec();
     base_combo.push(0);
     let mut another_combo: Vec<i32> = base_combo.to_vec();
 
-    let mut result: Vec<f64> = Vec::with_capacity(river_cluster_count as usize);
+    let mut result: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
     for _i in 0..river_cluster_count {
-        result.push(0.0);
+        result.push(0);
     }
 
     // Sample river cards and run simulations.
@@ -132,11 +132,11 @@ fn simulate_turn_ehs_distributions(
             let base_rank = card::evaluate(&base_combo, lookup);
             let another_rank = card::evaluate(&another_combo, lookup);
             if base_rank > another_rank {
-                ehs[0] += sub_prob_unit;
+                ehs[0] += 1;
             } else if base_rank < another_rank {
-                ehs[1] += sub_prob_unit;
+                ehs[1] += 1;
             } else {
-                ehs[2] += sub_prob_unit;
+                ehs[2] += 1;
             }
         }
 
@@ -154,7 +154,7 @@ fn simulate_turn_ehs_distributions(
             }
         }
         // now increment the cluster to which it belongs -
-        result[min_centroid_index] += prob_unit;
+        result[min_centroid_index] += 1;
     }
 
     result
@@ -168,11 +168,11 @@ pub fn simulate_turn_hand_strengths(
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
-) -> Vec<Vec<f64>> {
+) -> Vec<Vec<u8>> {
     let turn_combos_size = turn_combos.len();
     // let result_width = river_cluster_count;
 
-    let mut result: Vec<Vec<f64>> = Vec::with_capacity(turn_combos_size);
+    let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(turn_combos_size as u64);
@@ -181,7 +181,7 @@ pub fn simulate_turn_hand_strengths(
     let chunk_size = calc_chunk_size(turn_combos_size);
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+        let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
             .map(|turn_combo| {
                 simulate_turn_ehs_distributions(
                     deck,
@@ -214,20 +214,20 @@ fn simulate_flop_potential_aware_distributions(
     flop_simulation_count: u32,
     river_cluster_count: u32,
     turn_cluster_count: u32,
-) -> Vec<f64> {
+) -> Vec<u8> {
     let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !flop_combo.contains(x))
         .collect();
     let available_cards_count = available_cards.len();
     
-    let prob_unit = 1.0 / f64::from(flop_simulation_count);
+    // let prob_unit = 1.0 / f64::from(flop_simulation_count);
 
     let mut augmented_turn_combo: Vec<i32> = flop_combo.to_vec();
     augmented_turn_combo.push(0);
 
-    let mut result: Vec<f64> = Vec::with_capacity(turn_cluster_count as usize);
+    let mut result: Vec<u8> = Vec::with_capacity(turn_cluster_count as usize);
     for _i in 0..turn_cluster_count {
-        result.push(0.0);
+        result.push(0);
     }
 
     let mut rng = rand::thread_rng();
@@ -257,7 +257,7 @@ fn simulate_flop_potential_aware_distributions(
                 min_dist = dist;
             }
         }
-        result[min_centroid_index] += prob_unit;
+        result[min_centroid_index] += 1;
     }
 
     result
@@ -274,11 +274,11 @@ pub fn simulate_flop_hand_strengths(
     flop_simulation_count: u32,
     river_cluster_count: u32,
     turn_cluster_count: u32,
-) -> Vec<Vec<f64>> {
+) -> Vec<Vec<u8>> {
     let flop_combos_size = flop_combos.len();
     // let result_width = river_cluster_count;
 
-    let mut result: Vec<Vec<f64>> = Vec::with_capacity(flop_combos_size);
+    let mut result: Vec<Vec<u8>> = Vec::with_capacity(flop_combos_size);
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(flop_combos_size as u64);
@@ -287,7 +287,7 @@ pub fn simulate_flop_hand_strengths(
     let chunk_size = calc_chunk_size(flop_combos_size);
     for chunk in &flop_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-        let chunk_result: Vec<Vec<f64>> = chunk_clone.par_iter()
+        let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
             .map(|flop_combo| {
                 simulate_flop_potential_aware_distributions(
                     deck,
