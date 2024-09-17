@@ -3,7 +3,7 @@ import multiprocessing as mp
 import os
 import time
 from pathlib import Path
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, List
 
 import enlighten
 
@@ -32,6 +32,7 @@ class Server:
         dump_iteration: int,
         update_threshold: int,
         save_path: Union[str, Path],
+        include_ranks: List[int],
         lut_path: Union[str, Path] = ".",
         pickle_dir: bool = False,
         agent_path: Optional[Union[str, Path]] = None,
@@ -43,6 +44,7 @@ class Server:
         n_processes: int = mp.cpu_count() - 1,
     ):
         """Set up the optimisation server."""
+        self._include_ranks = include_ranks
         self._strategy_interval = strategy_interval
         self._n_iterations = n_iterations
         self._lcfr_threshold = lcfr_threshold
@@ -228,6 +230,7 @@ class Server:
                 update_threshold=self._update_threshold,
                 dump_iteration=self._dump_iteration,
                 save_path=self._save_path,
+                include_ranks=self._include_ranks,
             )
             workers[worker.name] = worker
         for name, worker in workers.items():

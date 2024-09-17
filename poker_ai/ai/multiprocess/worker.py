@@ -2,7 +2,7 @@ import copy
 import multiprocessing as mp
 import os
 from pathlib import Path
-from typing import Dict, Union
+from typing import Dict, Union, List
 
 import joblib
 import numpy as np
@@ -32,6 +32,7 @@ class Worker(mp.Process):
         update_threshold: int,
         dump_iteration: int,
         save_path: Path,
+        include_ranks: List[int],
     ):
         """Construct the process, setup the state."""
         super().__init__(group=None, name=None, args=(), kwargs={}, daemon=None)
@@ -48,6 +49,7 @@ class Worker(mp.Process):
         self._update_threshold = update_threshold
         self._dump_iteration = dump_iteration
         self._save_path = Path(save_path)
+        self._include_ranks = include_ranks
         self._info_set_lut: state.InfoSetLookupTable = info_set_lut
         self._setup_new_game()
 
@@ -142,5 +144,5 @@ class Worker(mp.Process):
     def _setup_new_game(self):
         """Setup up new poker game."""
         self._state: state.ShortDeckPokerState = state.new_game(
-            self._n_players, self._info_set_lut,
+            self._n_players, self._info_set_lut, include_ranks=self._include_ranks,
         )
