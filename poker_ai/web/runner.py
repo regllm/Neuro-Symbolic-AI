@@ -94,10 +94,10 @@ def create_game_action(request: Request, gid: int, body: CreateActionRequest):
     )
 )
 @click.option(
-    "--single_agent/--multiple_agent",
-    default=False,
+    "--include_dumb_players/--no_dumb_players",
+    default=True,
     help=(
-        "Play with only one AI agent."
+        "Play with random agents."
     )
 )
 @click.option(
@@ -129,7 +129,7 @@ def create_game_action(request: Request, gid: int, body: CreateActionRequest):
 def run_web_app(
     host: str,
     port: int,
-    single_agent: bool,
+    include_dumb_players: bool,
     n_players: int,
     low_card_rank: int,
     high_card_rank: int,
@@ -167,7 +167,7 @@ def run_web_app(
         "high_card_rank": high_card_rank,
         "strategy": strategy,
         "lut": lut,
-        "single_agent": single_agent,
+        "include_dumb_players": include_dumb_players,
     }
 
     uvicorn.run(
