@@ -207,7 +207,8 @@ class PokerDemo:
         )
         self._rotate_players()
         for player, chip_count in zip(self._get_players(), chip_counts):
-            player.n_chips = chip_count
+            missing_chip_count = self.state._initial_n_chips - player.n_chips
+            player.n_chips = chip_count - missing_chip_count
         self._add_event("new")
 
     def _apply_action(self, action):
