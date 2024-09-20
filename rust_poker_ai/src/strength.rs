@@ -175,7 +175,7 @@ pub fn simulate_turn_hand_strengths(
     println!("Init results");
     let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
     for i in 0..turn_combos_size {
-        let row: Vec<u8> = Vec::with_capacity(river_cluster_count);
+        let row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
         for j in 0..river_cluster_count {
             row.push(0u8);
         }
@@ -183,7 +183,7 @@ pub fn simulate_turn_hand_strengths(
     }
     println!("Done init results");
 
-    result = Vec::with_capacity(turn_combos_size);
+    result = Vec::with_capacity(turn_combos_size as usize);
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(turn_combos_size as u64);
