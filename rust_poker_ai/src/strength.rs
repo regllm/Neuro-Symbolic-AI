@@ -190,7 +190,8 @@ pub fn simulate_turn_hand_strengths(
     progress.set_style(style);
 
     let chunk_size = calc_chunk_size(turn_combos_size);
-    for (chunk_index, chunk) in &turn_combos.into_iter().chunks(chunk_size).enumerate() {
+    let mut chunk_cursor: usize = 0;
+    for chunk in &turn_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
         let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
             .map(|turn_combo| {
@@ -206,13 +207,14 @@ pub fn simulate_turn_hand_strengths(
             })
             .collect();
         let curr_chunk_size = chunk_result.len() as u64;
-        for i in 0..curr_chunk_size {
-            for j in 0..river_cluster_count {
-                result[chunk_size * chunk_index + i][j] = chunk_result[i][j];
+        for i in 0..chunk_result.len() {
+            for j in 0..(river_cluster_count as usize) {
+                result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
             }
         }
         // result.extend(chunk_result);
         progress.inc(curr_chunk_size);
+        chunk_cursor += 1;
     }
     progress.finish();
 
