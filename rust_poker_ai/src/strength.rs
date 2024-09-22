@@ -172,7 +172,7 @@ pub fn simulate_turn_hand_strengths(
     let turn_combos_size = turn_combos.len();
     // let result_width = river_cluster_count;
 
-    println!("Init results");
+    // println!("Init results");
     let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
     for i in 0..turn_combos_size {
         let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
@@ -181,7 +181,7 @@ pub fn simulate_turn_hand_strengths(
         }
         result.push(row);
     }
-    println!("Done init results");
+    // println!("Done init results");
 
     // result = Vec::with_capacity(turn_combos_size as usize);
 
@@ -192,8 +192,8 @@ pub fn simulate_turn_hand_strengths(
     let chunk_size = calc_chunk_size(turn_combos_size);
     let mut chunk_cursor: usize = 0;
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
-        let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-        let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
+        let mut chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+        let mut chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
             .map(|turn_combo| {
                 simulate_turn_ehs_distributions(
                     deck,
@@ -214,6 +214,8 @@ pub fn simulate_turn_hand_strengths(
         }
         // result.extend(chunk_result);
         progress.inc(curr_chunk_size);
+        chunk_clone.drain(..);
+        chunk_result.drain(..);
         chunk_cursor += 1;
     }
     progress.finish();
