@@ -192,30 +192,32 @@ pub fn simulate_turn_hand_strengths(
     let chunk_size = calc_chunk_size(turn_combos_size);
     let mut chunk_cursor: usize = 0;
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
-        let mut chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-        let mut chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
-            .map(|turn_combo| {
-                simulate_turn_ehs_distributions(
-                    deck,
-                    &turn_combo,
-                    lookup,
-                    river_centroids,
-                    river_simulation_count,
-                    turn_simulation_count,
-                    river_cluster_count,
-                )
-            })
-            .collect();
-        let curr_chunk_size = chunk_result.len() as u64;
-        for i in 0..chunk_result.len() {
-            for j in 0..(river_cluster_count as usize) {
-                result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
+        let mut curr_chunk_size: u64;
+        { 
+            // This is a scope for handling a single chunk.
+            let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+            let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
+                .map(|turn_combo| {
+                    simulate_turn_ehs_distributions(
+                        deck,
+                        &turn_combo,
+                        lookup,
+                        river_centroids,
+                        river_simulation_count,
+                        turn_simulation_count,
+                        river_cluster_count,
+                    )
+                })
+                .collect();
+            curr_chunk_size = chunk_result.len() as u64;
+            for i in 0..chunk_result.len() {
+                for j in 0..(river_cluster_count as usize) {
+                    result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
+                }
             }
         }
         // result.extend(chunk_result);
         progress.inc(curr_chunk_size);
-        chunk_clone.drain(..);
-        chunk_result.drain(..);
         chunk_cursor += 1;
     }
     progress.finish();
