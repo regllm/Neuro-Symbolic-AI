@@ -169,7 +169,7 @@ class ShortDeckPokerState:
             A poker state instance that represents the game in the next
             timestep, after the action has been applied.
         """
-        if action_str not in self.legal_actions:
+        if action_str.split(":")[0] not in self.legal_actions:
             raise ValueError(
                 f"Action '{action_str}' not in legal actions: " f"{self.legal_actions}"
             )
@@ -192,10 +192,14 @@ class ShortDeckPokerState:
             logger.debug("calling")
         elif action_str == "fold":
             action = new_state.current_player.fold()
-        elif action_str == "raise":
+        elif action_str.startswith("raise"):
             bet_n_chips = new_state.big_blind
             if new_state._betting_stage in {"turn", "river"}:
                 bet_n_chips *= 2
+            if len(action_str.split(":")) > 1:
+                custom_bet_n_chips = int(action_str.split(":")[-1])
+                if custom_bet_n_chips > bet_n_chips:
+                    bet_n_chips = custom_bet_n_chips
             biggest_bet = max(p.n_bet_chips for p in new_state.players)
             n_chips_to_call = biggest_bet - new_state.current_player.n_bet_chips
             raise_n_chips = bet_n_chips + n_chips_to_call

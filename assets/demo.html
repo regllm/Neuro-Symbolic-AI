@@ -148,9 +148,16 @@
       }
     };
 
-    poker.submitAction = async (action) => {
+    poker.submitAction = async (rawAction) => {
       poker.setBusy(true);
       try {
+        let action = rawAction;
+        if (action === "raise") {
+          const amount = prompt("How much do you want to raise? Leave blank for minimum amount.");
+          if (amount.trim()) {
+            action = `raise:${amount}`;
+          }
+        }
         const response = await axios.post(`/games/${poker.gid}`, { action });
         poker.playEvents(response.data.events)
       } catch (err) {
