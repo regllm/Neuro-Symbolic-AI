@@ -111,7 +111,7 @@ def update_strategy(
         update_strategy(agent, new_state, i, t, locks)
     else:
         # Traverse each action.
-        for action in state.legal_actions:
+        for action in state.legal_traverse_actions:
             log.debug(f"Going to Traverse {action} for opponent")
             new_state: ShortDeckPokerState = state.apply_action(action)
             update_strategy(agent, new_state, i, t, locks)
@@ -187,7 +187,7 @@ def cfr(
 
         vo = 0.0
         voa: Dict[str, float] = {}
-        for action in state.legal_actions:
+        for action in state.legal_traverse_actions:
             log.debug(
                 f"ACTION TRAVERSED FOR REGRET: ph {state.player_i} ACTION: {action}"
             )
@@ -203,7 +203,7 @@ def cfr(
         if locks:
             locks["regret"].acquire()
         this_info_sets_regret = agent.regret.get(state.info_set, state.initial_regret)
-        for action in state.legal_actions:
+        for action in state.legal_traverse_actions:
             this_info_sets_regret[action] += voa[action] - vo
         # Assign regret back to the shared memory.
         agent.regret[state.info_set] = this_info_sets_regret
@@ -278,10 +278,10 @@ def cfrp(
         voa: Dict[str, float] = dict()
         # Explored dictionary to keep track of regret updates that can be
         # skipped.
-        explored: Dict[str, bool] = {action: False for action in state.legal_actions}
+        explored: Dict[str, bool] = {action: False for action in state.legal_traverse_actions}
         # Get the regret for this state.
         this_info_sets_regret = agent.regret.get(state.info_set, state.initial_regret)
-        for action in state.legal_actions:
+        for action in state.legal_traverse_actions:
             if this_info_sets_regret[action] > c:
                 new_state: ShortDeckPokerState = state.apply_action(action)
                 voa[action] = cfrp(agent, new_state, i, t, c, locks)
@@ -292,7 +292,7 @@ def cfrp(
         # Get the regret for this state again, incase any other process updated
         # it whilst we were doing `cfrp`.
         this_info_sets_regret = agent.regret.get(state.info_set, state.initial_regret)
-        for action in state.legal_actions:
+        for action in state.legal_traverse_actions:
             if explored[action]:
                 this_info_sets_regret[action] += voa[action] - vo
         # Update the master copy of the regret.
