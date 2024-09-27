@@ -380,12 +380,12 @@ class ShortDeckPokerState:
     @property
     def initial_regret(self) -> Dict[str, float]:
         """Returns the default regret for this state."""
-        return {action: 0 for action in self.legal_actions}
+        return {action: 0 for action in self.legal_traverse_actions}
 
     @property
     def initial_strategy(self) -> Dict[str, float]:
         """Returns the default strategy for this state."""
-        return {action: 0 for action in self.legal_actions}
+        return {action: 0 for action in self.legal_traverse_actions}
 
     @property
     def betting_stage(self) -> str:
