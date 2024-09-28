@@ -194,15 +194,14 @@ pub fn simulate_turn_hand_strengths(
     let chunk_size = calc_chunk_size(turn_combos_size);
     let mut chunk_cursor: usize = 0;
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
-        let mut curr_chunk_size: u64;
+        let mut curr_chunk_size: u64 = 0;
         { 
             // This is a scope for handling a single chunk.
             // let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-            curr_chunk_size = chunk_clone.len() as u64;
             let chunk_row = chunk_size * chunk_cursor;
 
             // chunk_clone.par_iter()
-            chunk.iter()
+            chunk
                 .enumerate()
                 .for_each(|(i, turn_combo)| {
                     simulate_turn_ehs_distributions(
@@ -215,6 +214,7 @@ pub fn simulate_turn_hand_strengths(
                         turn_simulation_count,
                         river_cluster_count,
                     );
+                    curr_chunk_size += 1;
                 });
             
             // for i in 0..chunk_result.len() {
@@ -222,9 +222,9 @@ pub fn simulate_turn_hand_strengths(
             //         result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
             //     }
             // }
-            for combo in chunk_clone {
-                drop(combo);
-            }
+            // for combo in chunk_clone {
+            //     drop(combo);
+            // }
             // drop(chunk_result);
         }
         // result.extend(chunk_result);
