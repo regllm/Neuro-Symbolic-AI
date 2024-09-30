@@ -294,7 +294,8 @@ fn simulate_flop_potential_aware_distributions(
         let mut min_centroid_index: usize = 0;
         let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
-            let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
+            // let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
+            let dist = 0.5;
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
