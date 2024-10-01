@@ -92,13 +92,12 @@ pub fn simulate_river_hand_strengths(
 fn simulate_turn_ehs_distributions(
     deck: &Vec<i32>,
     turn_combo: &Vec<i32>,
-    result: *const u8,
     lookup: &card::LookupTable,
     river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
-) {
+) -> Vec<u8> {
     let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !turn_combo.contains(x))
         .collect();
@@ -110,10 +109,10 @@ fn simulate_turn_ehs_distributions(
     base_combo.push(0);
     let mut another_combo: Vec<i32> = base_combo.to_vec();
 
-    // let mut result: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
-    // for _i in 0..river_cluster_count {
-    //     result.push(0);
-    // }
+    let mut result: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
+    for _i in 0..river_cluster_count {
+        result.push(0);
+    }
 
     // Sample river cards and run simulations.
     let mut rng = rand::thread_rng();
@@ -157,14 +156,14 @@ fn simulate_turn_ehs_distributions(
             }
         }
         // now increment the cluster to which it belongs -
-        // result[min_centroid_index] += 1;
-        unsafe {
-            let mut_result: *mut u8 = result as *mut u8;
-            *mut_result.offset(min_centroid_index.try_into().unwrap()) += 1;
-        }
+        result[min_centroid_index] += 1;
+        // unsafe {
+        //     let mut_result: *mut u8 = result as *mut u8;
+        //     *mut_result.offset(min_centroid_index.try_into().unwrap()) += 1;
+        // }
     }
 
-    // result
+    result
 }
 
 pub fn simulate_turn_hand_strengths(
@@ -181,53 +180,42 @@ pub fn simulate_turn_hand_strengths(
     // Initialize the result vector.
     let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
     // let mut shared_result: Arc<Mutex<Vec<Vec<u8>>>> = Arc::new(Mutex::new(Vec::with_capacity(turn_combos_size)));
-    for i in 0..turn_combos_size {
-        let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
-        for _j in 0..river_cluster_count {
-            row.push(0u8);
-        }
-        result.push(row);
-        // shared_result.lock().unwrap().push(row);
-    }
+    // for i in 0..turn_combos_size {
+    //     let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
+    //     for _j in 0..river_cluster_count {
+    //         row.push(0u8);
+    //     }
+    //     result.push(row);
+    //     // shared_result.lock().unwrap().push(row);
+    // }
 
     let progress = progress::new(turn_combos_size as u64);
 
     let chunk_size = calc_chunk_size(turn_combos_size);
     let mut chunk_cursor: usize = 0;
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
-        let mut curr_chunk_size: u64 = 0;
-        { 
-            // This is a scope for handling a single chunk.
-            let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-            curr_chunk_size = chunk_clone.len() as u64;
-            let chunk_row = chunk_size * chunk_cursor;
+        let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+        let curr_chunk_size = chunk_clone.len() as u64;
 
-            chunk_clone.par_iter()
-                .enumerate()
-                .for_each(|(i, turn_combo)| {
-                    simulate_turn_ehs_distributions(
-                        deck,
-                        &turn_combo,
-                        result[chunk_row + i].as_ptr(),
-                        lookup,
-                        river_centroids,
-                        river_simulation_count,
-                        turn_simulation_count,
-                        river_cluster_count,
-                    );
-                });
-            
-            // for i in 0..chunk_result.len() {
-            //     for j in 0..(river_cluster_count as usize) {
-            //         result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
-            //     }
-            // }
-            for combo in chunk_clone {
-                drop(combo);
-            }
-            // drop(chunk_result);
+        let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
+            .map(|turn_combo| {
+                simulate_turn_ehs_distributions(
+                    deck,
+                    &turn_combo,
+                    lookup,
+                    river_centroids,
+                    river_simulation_count,
+                    turn_simulation_count,
+                    river_cluster_count,
+                )
+            })
+            .collect();;
+        
+        for combo in chunk_clone {
+            drop(combo);
         }
-        // result.extend(chunk_result);
+        result.extend(chunk_result);
+        
         progress.inc(curr_chunk_size);
         chunk_cursor += 1;
     }
@@ -277,14 +265,13 @@ fn simulate_flop_potential_aware_distributions(
         let r = shuffle::get_random_index(&mut rng, available_cards_count);
         augmented_turn_combo[5] = *available_cards[r];
 
-        let mut turn_ehs_distribution: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
-        for _i in 0..river_cluster_count {
-            turn_ehs_distribution.push(0);
-        }
-        simulate_turn_ehs_distributions(
+        // let mut turn_ehs_distribution: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
+        // for _i in 0..river_cluster_count {
+        //     turn_ehs_distribution.push(0);
+        // }
+        let turn_ehs_distribution = simulate_turn_ehs_distributions(
             deck,
             &augmented_turn_combo,
-            turn_ehs_distribution.as_ptr(),
             lookup,
             river_centroids,
             river_simulation_count,
