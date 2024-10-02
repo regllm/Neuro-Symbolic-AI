@@ -180,8 +180,8 @@ checksum = "11157ac094ffbdde99aa67b23417ebdd801842852b500e395a45a9c0aac03e4a"
 
 [[package]]
 name = "emd"
-version = "0.1.1"
-source = "git+https://github.com/tanker-fund/rust-emd.git?tag=v0.2.0#3e362efc346bfe9bff5c17c97c9ec935f1326ba7"
+version = "0.2.1"
+source = "git+https://github.com/tanker-fund/rust-emd.git?tag=v0.2.1#a07628bf906b2c4eb804890ed0243f0bbc5eff6f"
 dependencies = [
  "cc",
  "libc",
