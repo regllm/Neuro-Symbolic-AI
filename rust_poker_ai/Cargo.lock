@@ -179,16 +179,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "11157ac094ffbdde99aa67b23417ebdd801842852b500e395a45a9c0aac03e4a"
 
 [[package]]
-name = "emd"
-version = "0.2.1"
-source = "git+https://github.com/tanker-fund/rust-emd.git?tag=v0.2.1#a07628bf906b2c4eb804890ed0243f0bbc5eff6f"
-dependencies = [
- "cc",
- "libc",
- "ndarray",
-]
-
-[[package]]
 name = "encode_unicode"
 version = "0.3.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -465,7 +455,6 @@ dependencies = [
  "approx",
  "ckmeans",
  "clap",
- "emd",
  "generator",
  "indicatif",
  "itertools",
@@ -478,6 +467,7 @@ dependencies = [
  "rayon",
  "serde",
  "serde_json",
+ "simple_emd",
 ]
 
 [[package]]
@@ -521,6 +511,15 @@ dependencies = [
  "itoa",
  "ryu",
  "serde",
+]
+
+[[package]]
+name = "simple_emd"
+version = "0.1.2"
+source = "git+https://github.com/tanker-fund/rust-simple-emd.git?tag=v0.1.2#71965f2ca07549839ae56669b18066f2c62a0ce7"
+dependencies = [
+ "cc",
+ "libc",
 ]
 
 [[package]]
