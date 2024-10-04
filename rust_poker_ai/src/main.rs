@@ -316,10 +316,10 @@ fn build_flop_lut(
 
 
 fn build_lut() {
-    let args = args::get_args();
+    let cluster_args = args::get_cluster_args().unwrap();
 
-    let min_rank = 2;
-    let max_rank = if args.short { 5 } else { 14 };
+    let min_rank = if cluster_args.short { 10 } else { 2 };
+    let max_rank = 14;
     let deck = combo::create_deck(min_rank, max_rank);
     let start_combos = combo::create_card_combos(&deck, 2);
     let lookup = card::load_lookup("./assets/lookup.json");
@@ -361,13 +361,17 @@ fn build_lut() {
 
 
 fn main() {
-    let args = args::get_args();
+    match args::get_command() {
+        args::Command::Cluster(cmd_args) => {
+            build_lut();
+        }
+        args::Command::Table(cmd_args) => {
+            table_server::run_server();
+        }
+        args::Command::Exp => {
+            exp::exp();
+        }
+        _ => {}
+   }
 
-    if args.exp {
-        exp::exp();
-    } else if args.table {
-        table_server::run_server();
-    } else {
-        build_lut();
-    }
 }

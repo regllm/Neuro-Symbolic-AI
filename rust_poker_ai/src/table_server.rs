@@ -136,8 +136,8 @@ fn handle_client(mut stream: TcpStream) {
 }
 
 fn start_server() {
-    let args = args::get_args();
-    let address = format!("{}:{}", args.host, args.port);
+    let table_args = args::get_table_args().unwrap();
+    let address = format!("{}:{}", table_args.host, table_args.port);
 
     let listener = TcpListener::bind(address.clone());
     match listener {
@@ -166,8 +166,7 @@ fn start_server() {
 }
 
 pub fn run_server() {
-    let args = args::get_args();
-
-    load_lookup_tables(&args.table_path);
+    let table_args = args::get_table_args().unwrap();
+    load_lookup_tables(&table_args.input);
     start_server();
 }
