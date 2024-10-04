@@ -18,7 +18,7 @@ pub fn wasserstein(v1: &Vec<f32>, v2: &Vec<f64>) -> f32 {
 
     let distance = distance(&v1, &v2_f32) as f32;
 
-    if (distance < 0) {
+    if (distance < 0.0) {
         println!("distance failed: {:?}, {:?}", v1, v2_f32);
     }
 
