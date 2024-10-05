@@ -1,6 +1,5 @@
 use ckmeans::cluster_u8;
 use native_emd::distance;
-use std::mem::drop;
 
 
 const KMEANS_MAX_ITER: u32 = 300;
