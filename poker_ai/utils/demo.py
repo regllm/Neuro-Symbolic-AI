@@ -211,10 +211,24 @@ class PokerDemo:
             player.n_chips = chip_count - missing_chip_count
         self._add_event("new")
 
+    def _get_winner(self, prev_chip_counts, chip_counts):
+        for i, (prev, curr) in enumerate(zip(prev_chip_counts, chip_counts)):
+            if curr > prev:
+                return self._get_players()[i]
+        return None
+
     def _apply_action(self, action):
         raw_player_name = self.state.current_player.name
+        prev_chip_counts = [player.n_chips for player in self._get_players()]
         self.state = self.state.apply_action(action)
-        self._add_event(action, raw_player_name)
+        chip_counts = [player.n_chips for player in self._get_players()]
+        winner = self._get_winner(prev_chip_counts, chip_counts)
+        if winner is not None:
+            winner_name = self.player_name_dict[winner.name]
+            augmented_action = f"{action} - {winner_name} wins!"
+        else:
+            augmented_action = action
+        self._add_event(augmented_action, raw_player_name)
 
     def _calc_action_and_play(self):
         if self.include_dumb_players and self.state.current_player.name not in self.agent_player_names:
