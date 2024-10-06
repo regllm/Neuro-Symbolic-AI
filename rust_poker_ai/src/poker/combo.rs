@@ -1,5 +1,5 @@
-use crate::card;
-use crate::math;
+use crate::poker::{card, math};
+
 use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use std::collections::HashSet;

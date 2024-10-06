@@ -1,6 +1,7 @@
 use crate::args;
-use crate::card;
+use crate::poker::card;
 use crate::progress;
+
 use indicatif::{ProgressBar};
 use std::collections::HashMap;
 use std::fs::{File};
