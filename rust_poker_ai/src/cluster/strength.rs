@@ -143,11 +143,10 @@ fn simulate_turn_ehs_distributions(
         // Get EMD for expected hand strength against each river centroid
         // to which does it belong?
         let mut min_centroid_index: usize = 0;
-        let mut min_dist: f32 = -1.0;
+        let mut min_dist: f64 = -1.0;
         for (i, river_centroid) in river_centroids.iter().enumerate() {
-            let ehs_f32: Vec<f32> = ehs.iter().map(|&x| x as f32).collect();
-            let dist = util::euclidean(&ehs_f32, &river_centroid);
-            drop(ehs_f32);
+            let ehs_f64: Vec<f64> = ehs.iter().map(|&x| x as f64).collect();
+            let dist = util::wasserstein(&ehs_f64, &river_centroid);
             // let dist = 0.5;
             if min_dist < 0.0 {
                 min_dist = dist;
@@ -279,11 +278,10 @@ fn simulate_flop_potential_aware_distributions(
         );
 
         let mut min_centroid_index: usize = 0;
-        let mut min_dist: f32 = -1.0;
+        let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
-            let ted_f32: Vec<f32> = turn_ehs_distribution.iter().map(|&x| x as f32).collect();
-            let dist = util::euclidean(&ted_f32, &turn_centroid);
-            drop(ted_f32);
+            let ted_f64: Vec<f64> = turn_ehs_distribution.iter().map(|&x| x as f64).collect();
+            let dist = util::euclidean(&ted_f64, &turn_centroid);
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
