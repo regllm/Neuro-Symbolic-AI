@@ -1,3 +1,4 @@
+workspace = { members = ["extern/calc_emd"] }
 [package]
 name = "rust_poker_ai"
 version = "0.1.0"
