@@ -161,6 +161,11 @@ class ShortDeckPokerState:
             self.current_player.is_active = False
             self._skip_counter += 1
             self._move_to_next_player()
+    
+    def flag_broke_players(self):
+        for player in self.players:
+            if player.n_chips == 0:
+                player.is_broke = True
 
     def __repr__(self):
         """Return a helpful description of object in strings and debugger."""
@@ -263,12 +268,13 @@ class ShortDeckPokerState:
             if not new_state.current_player.is_active:
                 new_state._skip_counter += 1
                 assert not new_state.current_player.is_active
-            elif new_state.current_player.n_chips == 0:
-                # Auto-fold player with no chips.
+            elif new_state.current_player.is_broke:
+                # Auto-fold broke players.
                 new_state.current_player.is_active = False
                 new_state._skip_counter += 1
             elif new_state.current_player.is_active:
-                if new_state._poker_engine.n_players_with_moves == 1:
+                # if new_state._poker_engine.n_players_with_moves == 1:
+                if new_state._poker_engine.n_active_players == 1:
                     # No players left.
                     new_state._betting_stage = "terminal"
                     if not new_state._table.community_cards:

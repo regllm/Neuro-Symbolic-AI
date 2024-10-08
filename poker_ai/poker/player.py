@@ -40,6 +40,7 @@ class Player:
         self.is_small_blind = False
         self.is_big_blind = False
         self.is_dealer = False
+        self.is_broke = False
 
     def __repr__(self):
         """"""
