@@ -16,6 +16,8 @@ def player_to_str(player, name, hidden=True):
     turn_char = " "
     if player.is_turn:
         turn_char = "*"
+    elif player.is_broke:
+        turn_char = "∅"
     elif not player.is_active:
         turn_char = "#"
     chunks.append(f"[{name:^10}]{turn_char}")
@@ -40,6 +42,7 @@ def player_to_dict(player, name, hidden=True):
     return {
         "name": name,
         "folded": not player.is_active,
+        "broke": player.is_broke,
         "is_turn": player.is_turn,
         "cards": None if hidden else [card.to_pair() for card in player.cards],
         "pot": player.n_bet_chips,
@@ -229,13 +232,13 @@ class PokerDemo:
         winner = self._get_winner(prev_chip_counts, chip_counts)
         if winner is not None:
             winner_name = self.player_name_dict[winner.name]
-            augmented_action = f"{action} - {winner_name} wins!"
+            augmented_action = f"{action} - {winner_name} won!"
         else:
             augmented_action = action
         self._add_event(augmented_action, raw_player_name)
 
     def _calc_action_and_play(self):
-        if self.include_dumb_players and self.state.current_player.name not in self.agent_player_names:
+        if self.include_dumb_players and self.state.current_player.name in self.agent_player_names:
             action = calc_action(self.state, None)
         else:    
             action = calc_action(self.state, self.strategy)
