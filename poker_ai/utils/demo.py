@@ -70,10 +70,16 @@ def state_to_str(state, players, names, client_player_name):
 
 def state_to_dict(state, players, names, client_player_name):
     player_dicts = []
+    client_player_n_chips = None
     for player, name in zip(players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
         player_dicts.append(player_to_dict(player, name, hidden=hidden))
+        if is_client:
+            client_player_n_chips = player.n_chips
+    actions = get_available_actions(state)
+    if client_player_n_chips == 0:
+        actions = [action for action in actions if action != "raise"]
     return {
         "publics": [card.to_pair() for card in state.community_cards],
         "players": player_dicts,
