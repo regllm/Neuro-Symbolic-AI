@@ -27,14 +27,17 @@ def player_to_str(player, name, hidden=True):
         chunks.append("CARD: " + "".join([card.to_pretty() for card in player.cards]))
     chunks.append(f"POT: {player.n_bet_chips:>6}")
     chunks.append(f"BANK: {player.n_chips:>6}")
-    if player.is_small_blind:
-        chunks.append("<SMALL BLIND>")
-    if player.is_big_blind:
-        chunks.append("<BIG BLIND>")
-    if player.is_dealer:
-        chunks.append("<DEALER>")
-    if not player.is_active:
-        chunks.append("<FOLDED>")
+    if player.is_broke:
+        chunks.append("<BROKE>")
+    else:
+        if player.is_small_blind:
+            chunks.append("<SMALL BLIND>")
+        if player.is_big_blind:
+            chunks.append("<BIG BLIND>")
+        if player.is_dealer:
+            chunks.append("<DEALER>")
+        if not player.is_active:
+            chunks.append("<FOLDED>")
     return " ".join(chunks)
 
 
