@@ -13,7 +13,7 @@ from tqdm import tqdm
 from poker_ai.clustering.card_combos import CardCombos
 from poker_ai.clustering.combo_lookup import ComboLookup
 from poker_ai.clustering.game_utility import GameUtility
-from poker_ai.clustering.preflop import compute_preflop_lossless_abstraction
+from poker_ai.clustering.preflop import compute_preflop_lossy_abstraction
 from poker_ai.poker.evaluation import Evaluator
 from poker_ai.utils.safethread import multiprocess_ehs_calc
 
@@ -91,7 +91,7 @@ class CardInfoLutBuilder(CardCombos):
     
     def load_raw_dir(self, raw_dir: str):
         log.info("Calculating pre-flop abstraction.")
-        self.card_info_lut["pre_flop"] = compute_preflop_lossless_abstraction(
+        self.card_info_lut["pre_flop"] = compute_preflop_lossy_abstraction(
             builder=self
         )
         
@@ -151,7 +151,7 @@ class CardInfoLutBuilder(CardCombos):
         log.info("Starting computation of clusters.")
         start = time.time()
         if "pre_flop" not in self.card_info_lut:
-            self.card_info_lut["pre_flop"] = compute_preflop_lossless_abstraction(
+            self.card_info_lut["pre_flop"] = compute_preflop_lossy_abstraction(
                 builder=self
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)

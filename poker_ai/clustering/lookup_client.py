@@ -7,7 +7,7 @@ from itertools import combinations
 
 import numpy as np
 
-from poker_ai.clustering.preflop import compute_preflop_lossless_abstraction
+from poker_ai.clustering.preflop import compute_preflop_lossy_abstraction
 from poker_ai.poker.evaluation.eval_card import EvaluationCard
 
 
@@ -63,7 +63,7 @@ class LookupClient:
         self.port = int(port)
         
         builder = LightBuilder(low_card_rank, high_card_rank)
-        self.preflop = compute_preflop_lossless_abstraction(builder)
+        self.preflop = compute_preflop_lossy_abstraction(builder)
         self.requester = ClusterRequester(self)
 
     def connect(self):
