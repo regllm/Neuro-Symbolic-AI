@@ -86,7 +86,7 @@ def state_to_dict(state, players, names, client_player_name):
         "pot": state._table.pot.total,
         "is_terminal": state.is_terminal,
         "is_waiting": is_waiting(state, client_player_name),
-        "actions": get_available_actions(state),
+        "actions": actions,
         "text": state_to_str(state, players, names, client_player_name),
     }
 
