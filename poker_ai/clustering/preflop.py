@@ -31,8 +31,8 @@ def make_starting_hand_lossy(starting_hand, short_deck=None) -> int:
     ranks = []
     suits = []
     for card in starting_hand:
-        ranks.add(EvaluationCard.get_rank_int(card))
-        suits.add(EvaluationCard.get_suit_int(card))
+        ranks.append(EvaluationCard.get_rank_int(card))
+        suits.append(EvaluationCard.get_suit_int(card))
     
     if len(set(suits)) == 1:
         suited = True
