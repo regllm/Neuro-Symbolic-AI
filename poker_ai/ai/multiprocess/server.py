@@ -41,7 +41,7 @@ class Server:
         sync_discount: bool = False,
         sync_serialise: bool = False,
         start_timestep: int = 1,
-        n_processes: int = mp.cpu_count() - 1,
+        n_processes: int = max(mp.cpu_count() - 10, 4),
     ):
         """Set up the optimisation server."""
         self._include_ranks = include_ranks
