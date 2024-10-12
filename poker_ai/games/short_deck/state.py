@@ -517,6 +517,10 @@ class ShortDeckPokerState:
     def current_player(self) -> ShortDeckPokerPlayer:
         """Returns a reference to player that makes a move for this state."""
         return self._table.players[self.player_i]
+    
+    @property
+    def raise_limit(self) -> int:
+        return 4 if self.allow_fourth_bet else 3
 
     @property
     def legal_actions(self) -> List[Optional[str]]:
@@ -524,7 +528,7 @@ class ShortDeckPokerState:
         actions: List[Optional[str]] = []
         if self.current_player.is_active:
             actions += ["fold", "call"]
-            if (self.allow_fourth_bet and self._n_raises < 4) or (not self.allow_fourth_bet and self._n_raises < 3):
+            if self._n_raises < self.raise_limit:
                 # In limit hold'em we can only bet/raise if there have been
                 # less than three or four raises in this round of betting, or if there
                 # are two players playing.
@@ -543,7 +547,7 @@ class ShortDeckPokerState:
         if self.current_player.is_active:
             actions.append("fold")
             actions.append("call")
-            if self._n_raises < 4:
+            if self._n_raises < self.raise_limit:
                 # In limit hold'em we can only bet/raise if there have been
                 # less than three raises in this round of betting, or if there
                 # are two players playing.
