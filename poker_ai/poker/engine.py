@@ -25,11 +25,18 @@ class PokerEngine:
     hand, but should generally not change during a session on the table.
     """
 
-    def __init__(self, table: PokerTable, small_blind: int, big_blind: int):
+    def __init__(
+        self,
+        table: PokerTable,
+        small_blind: int,
+        big_blind: int,
+        handle_all_in: bool = False,
+    ):
         """"""
         self.table = table
         self.small_blind = small_blind
         self.big_blind = big_blind
+        self.handle_all_in = handle_all_in
         self.evaluator = Evaluator()
         self.state = PokerGameState.new_hand(self.table)
         self.wins_and_losses = []
@@ -49,8 +56,28 @@ class PokerEngine:
             self._assign_blinds()
         
 
-    def assign_blinds(self):
-        return self._assign_blinds()
+    def smart_assign_blinds(self):
+        """Assign the blinds to the players with enough chips."""
+        small_blind_player = None
+        big_blind_player = None
+        for player in self.table.players:
+            if small_blind_player is None:
+                if player.n_chips < self.small_blind:
+                    continue
+                small_blind_player = player
+                player.add_to_pot(self.small_blind)
+                player.is_small_blind = True
+            elif big_blind_player is None:
+                if player.n_chips < self.big_blind:
+                    continue
+                big_blind_player = player
+                player.add_to_pot(self.big_blind)
+                player.is_big_blind = True
+                break
+        blind_players = [small_blind_player, big_blind_player]
+        logger.debug(f"Assigned blinds to players {blind_players}")
+
+        return blind_players
 
     def _all_dealing_and_betting_rounds(self):
         """Run through dealing of all cards and all rounds of betting."""
@@ -149,28 +176,9 @@ class PokerEngine:
 
     def _assign_blinds(self):
         """Assign the blinds to the players."""
-        small_blind_player = None
-        big_blind_player = None
-        for player in self.table.players:
-            if small_blind_player is None:
-                if player.n_chips < self.small_blind:
-                    continue
-                small_blind_player = player
-                player.add_to_pot(self.small_blind)
-                player.is_small_blind = True
-            elif big_blind_player is None:
-                if player.n_chips < self.big_blind:
-                    continue
-                big_blind_player = player
-                player.add_to_pot(self.big_blind)
-                player.is_big_blind = True
-                break
-        # self.table.players[0].add_to_pot(self.small_blind)
-        # self.table.players[1].add_to_pot(self.big_blind)
-        blind_players = [small_blind_player, big_blind_player]
-        logger.debug(f"Assigned blinds to players {blind_players}")
-
-        return blind_players
+        self.table.players[0].add_to_pot(self.small_blind)
+        self.table.players[1].add_to_pot(self.big_blind)
+        logger.debug(f"Assigned blinds to players {self.table.players[:2]}")
 
     def _move_blinds(self):
         """Rotate the table's player list.
@@ -271,16 +279,26 @@ class PokerEngine:
         bet or folded, the current betting round is complete, else, more
         betting is required from the active players that are not all in.
         """
-        active_complete_bets = []
-        is_all_in = False
-        for player in self.table.players:
-            if player.is_all_in:
-                is_all_in = True
-            elif player.is_active:
-                active_complete_bets.append(player.n_bet_chips)
-        all_bets_equal = all(
-            [x == active_complete_bets[0] for x in active_complete_bets]
-        )
-        is_active_non_zero_bet = len(active_complete_bets) > 0 and active_complete_bets[0] > 0
-        # If there is an all-in player, there must be one or more active non-zero bet to end betting.
-        return not all_bets_equal or (is_all_in and not is_active_non_zero_bet)
+        if self.handle_all_in:
+            active_complete_bets = []
+            is_all_in = False
+            for player in self.table.players:
+                if player.is_all_in:
+                    is_all_in = True
+                elif player.is_active:
+                    active_complete_bets.append(player.n_bet_chips)
+            all_bets_equal = all(
+                [x == active_complete_bets[0] for x in active_complete_bets]
+            )
+            is_active_non_zero_bet = len(active_complete_bets) > 0 and active_complete_bets[0] > 0
+            # If there is an all-in player, there must be one or more active non-zero bet to end betting.
+            return not all_bets_equal or (is_all_in and not is_active_non_zero_bet)
+        else:
+            active_complete_bets = []
+            for player in self.table.players:
+                if player.is_active and not player.is_all_in:
+                    active_complete_bets.append(player.n_bet_chips)
+            all_bets_equal = all(
+                [x == active_complete_bets[0] for x in active_complete_bets]
+            )
+            return not all_bets_equal

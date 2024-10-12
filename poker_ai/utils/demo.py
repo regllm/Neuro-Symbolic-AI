@@ -204,6 +204,8 @@ class PokerDemo:
             self.lut,
             load_card_lut=False,
             include_ranks=include_ranks,
+            handle_all_in=True,
+            allow_fourth_bet=True,
         )
         self._rotate_players()
         self._add_event("new")
@@ -217,13 +219,15 @@ class PokerDemo:
             load_card_lut=False,
             include_ranks=include_ranks,
             without_blinds=True,
+            handle_all_in=True,
+            allow_fourth_bet=True,
         )
         self._rotate_players()
         for player, chip_count in zip(self._get_players(), chip_counts):
             missing_chip_count = self.state._initial_n_chips - player.n_chips
             player.n_chips = chip_count - missing_chip_count
         self.state.flag_broke_players()
-        self.state.assign_blinds()
+        self.state.smart_assign_blinds()
         self.state.skip_players_with_no_chips()
         self._add_event("new")
 

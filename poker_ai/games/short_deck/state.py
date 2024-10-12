@@ -82,6 +82,8 @@ class ShortDeckPokerState:
         include_ranks: List[int] = None,
         card_info_lut: Optional[Dict[str, Any]] = None,
         without_blinds: bool = False,
+        handle_all_in: bool = False,
+        allow_fourth_bet: bool = False,
     ):
         """Initialise state."""
         n_players = len(players)
@@ -90,6 +92,8 @@ class ShortDeckPokerState:
                 f"At least 2 players must be provided but only {n_players} "
                 f"were provided."
             )
+        self.handle_all_in = handle_all_in
+        self.allow_fourth_bet = allow_fourth_bet
         self._pickle_dir = pickle_dir
         # Store low and high card rank in the instance.
         self._low_card_rank = min(include_ranks)
@@ -114,11 +118,14 @@ class ShortDeckPokerState:
         self.small_blind = small_blind
         self.big_blind = big_blind
         self._poker_engine = PokerEngine(
-            table=self._table, small_blind=small_blind, big_blind=big_blind
+            table=self._table,
+            small_blind=small_blind,
+            big_blind=big_blind,
+            handle_all_in=self.handle_all_in,
         )
         # Reset the pot, assign betting order to players (might need to remove
         # this), assign blinds to the players.
-        self._poker_engine.round_setup(without_blinds=True)
+        self._poker_engine.round_setup(without_blinds=without_blinds)
         # Deal private cards to players.
         self._table.dealer.deal_private_cards(self._table.players)
         # Store the actions as they come in here.
@@ -134,8 +141,6 @@ class ShortDeckPokerState:
         # Rotate the big and small blind to the final positions for the pre
         # flop round only.
         player_i_order: List[int] = [p_i for p_i in range(n_players)]
-        if not without_blinds:
-            self.assign_blinds()
         self.players[-1].is_dealer = True
         self._player_i_lut: Dict[str, List[int]] = {
             "pre_flop": player_i_order[2:] + player_i_order[:2],
@@ -152,8 +157,8 @@ class ShortDeckPokerState:
             player.is_turn = False
         self.current_player.is_turn = True
     
-    def assign_blinds(self):
-        blind_players = self._poker_engine.assign_blinds()
+    def smart_assign_blinds(self):
+        blind_players = self._poker_engine.smart_assign_blinds()
         blind_players[0].is_small_blind = True
         blind_players[1].is_big_blind = True
 
@@ -269,7 +274,7 @@ class ShortDeckPokerState:
             if not new_state.current_player.is_active:
                 new_state._skip_counter += 1
                 assert not new_state.current_player.is_active
-            elif new_state.current_player.is_broke:
+            elif new_state.current_player.is_broke and self.handle_all_in:
                 # Auto-fold broke players.
                 new_state.current_player.is_active = False
                 new_state._skip_counter += 1
@@ -519,9 +524,9 @@ class ShortDeckPokerState:
         actions: List[Optional[str]] = []
         if self.current_player.is_active:
             actions += ["fold", "call"]
-            if self._n_raises < 4:
+            if (self.allow_fourth_bet and self._n_raises < 4) or (not self.allow_fourth_bet and self._n_raises < 3):
                 # In limit hold'em we can only bet/raise if there have been
-                # less than four raises in this round of betting, or if there
+                # less than three or four raises in this round of betting, or if there
                 # are two players playing.
                 actions += ["raise"]
         else:
