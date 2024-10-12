@@ -39,7 +39,7 @@ def make_starting_hand_lossy(starting_hand, short_deck=None) -> int:
     else:
         suited = False
     
-    coords = [14 - r for r in ranks]
+    coords = [12 - r for r in ranks]
     # Cards in starting_hand is desc-sorted.
     if suited:
         return CHART[coords[0]][coords[1]]
