@@ -469,16 +469,16 @@ class ShortDeckPokerState:
         )
         
         lookup_cards = tuple([card.eval_card for card in cards])
-        cards_cluster = 1
-        # if self.card_info_lut != {}:
-        #     try:
-        #         cards_cluster = self.card_info_lut[self._betting_stage][lookup_cards]
-        #     except KeyError:
-        #         if self.betting_stage not in {"terminal", "show_down"}:
-        #             raise ValueError("You should have these cards in your lut.")
-        #         return "default info set, please ensure you load it correctly"
-        # else:
-        #     cards_cluster = 1
+        # cards_cluster = 1
+        if self.card_info_lut != {}:
+            try:
+                cards_cluster = self.card_info_lut[self._betting_stage][lookup_cards]
+            except KeyError:
+                if self.betting_stage not in {"terminal", "show_down"}:
+                    raise ValueError("You should have these cards in your lut.")
+                return "default info set, please ensure you load it correctly"
+        else:
+            cards_cluster = 1
 
         # Convert history from a dict of lists to a list of dicts as I'm
         # paranoid about JSON's lack of care with insertion order.
