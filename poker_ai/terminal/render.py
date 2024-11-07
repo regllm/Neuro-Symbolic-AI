@@ -74,21 +74,26 @@ def print_table(
     n_spaces_between_cards: int = 4,
     n_chips_in_pot: int = 0,
 ):
-    top_left_player = players["top-left"]
-    top_middle_player = players["top-middle"]
-    top_right_player = players["top-right"]
-    bottom_left_player = players["bottom-left"]
-    bottom_middle_player = players["bottom-middle"]
-    bottom_right_player = players["bottom-right"]
+    # top_left_player = players["top-left"]
+    # top_middle_player = players["top-middle"]
+    # top_right_player = players["top-right"]
+    # bottom_left_player = players["bottom-left"]
+    # bottom_middle_player = players["bottom-middle"]
+    # bottom_right_player = players["bottom-right"]
+    left_player = players["left"]
+    middle_player = players["middle"]
+    right_player = players["right"]
     for line in public_cards.lines:
         print(term.center(line))
     print(term.center(f"chips in pot: {n_chips_in_pot}"))
     print("\n\n")
     spacing = " " * n_spaces_between_cards
-    for l, m, r in zip(top_left_player.lines, top_middle_player.lines, top_right_player.lines):
+    for l, m, r in zip(left_player.lines, middle_player.lines, right_player.lines):
         print(term.center(f"{l}{spacing}{m}{spacing}{r}"))
-    for l, m, r in zip(bottom_left_player.lines, bottom_middle_player.lines, bottom_right_player.lines):
-        print(term.center(f"{l}{spacing}{m}{spacing}{r}"))
+    # for l, m, r in zip(top_left_player.lines, top_middle_player.lines, top_right_player.lines):
+    #     print(term.center(f"{l}{spacing}{m}{spacing}{r}"))
+    # for l, m, r in zip(bottom_left_player.lines, bottom_middle_player.lines, bottom_right_player.lines):
+    #     print(term.center(f"{l}{spacing}{m}{spacing}{r}"))
 
 
 def print_log(term: Terminal, log: AsciiLogger):
