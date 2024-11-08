@@ -62,7 +62,7 @@ def run_terminal_app(
     selected_action_i: int = 0
     # positions = ["left", "middle", "right"]
     # names = {"left": "BOT 1", "middle": "BOT 2", "right": "HUMAN"}
-    positions = ["top-left", "top-middle", "top-right", "bottom-left", "bottom-middle", "bottom-right",]
+    positions = ["top-left", "top-middle", "top-right", "bottom-left", "bottom-middle", "bottom-right"]
     names = {"top-left": "BOT 1", "top-middle": "BOT 2", "top-right": "BOT 3", "bottom-left": "BOT 4", "bottom-middle": "BOT 5", "bottom-right": "HUMAN"}
     if not debug_quick_start and agent in {"offline", "online"}:
         offline_strategy_dict = joblib.load(strategy_path)
@@ -108,7 +108,7 @@ def run_terminal_app(
                 human_should_interact = True
             else:
                 og_current_name = state.current_player.name
-                human_should_interact = og_name_to_position[og_current_name] == "right"
+                human_should_interact = names[og_name_to_position[og_current_name]].lower() == "human"
                 if human_should_interact:
                     legal_actions = state.legal_actions
                 else:
