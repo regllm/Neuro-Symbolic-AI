@@ -40,7 +40,7 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 @click.command()
 @click.option(
     "--low_card_rank",
-    default=10,
+    default=2,
     help=(
         "The starting hand rank from 2 through 14 for the deck we want to "
         "cluster. We recommend starting small."
