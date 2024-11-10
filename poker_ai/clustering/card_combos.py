@@ -96,8 +96,8 @@ class CardCombos:
                 reverse=True,
             )
             # DEBUG
-            # for public_combo in publics:
-            for public_combo in publics[:10]:
+            for public_combo in publics:
+            # for public_combo in publics[:10]:
                 # Descending sort public_combo.
                 sorted_public_combo: List[Card] = sorted(
                     list(public_combo),
