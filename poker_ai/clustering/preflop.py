@@ -86,12 +86,12 @@ def compute_preflop_lossless_abstraction(builder) -> Dict[Tuple[Card, Card], int
     # allowed_ranks = {10, 11, 12, 13, 14}
     allowed_ranks = set(list(range(2, 15)))
     found_ranks = set([c.rank_int for c in builder._cards])
-    if found_ranks != allowed_ranks:
-        raise ValueError(
-            f"Preflop lossless abstraction only works for a short deck with "
-            f"ranks [10, jack, queen, king, ace]. What was specified="
-            f"{found_ranks} doesn't equal what is allowed={allowed_ranks}"
-        )
+    # if found_ranks != allowed_ranks:
+    #     raise ValueError(
+    #         f"Preflop lossless abstraction only works for a short deck with "
+    #         f"ranks [10, jack, queen, king, ace]. What was specified="
+    #         f"{found_ranks} doesn't equal what is allowed={allowed_ranks}"
+    #     )
     # Getting combos and indexing with lossless abstraction
     preflop_lossless: Dict[Tuple[Card, Card], int] = {}
     for starting_hand in builder.starting_hands:
