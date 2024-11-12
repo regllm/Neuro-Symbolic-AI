@@ -263,6 +263,7 @@ def start(
     with open(save_path / "config.yaml", "w") as steam:
         yaml.dump(config, steam)
     include_ranks = list(range(low_card_rank, high_card_rank - 1))
+    log.info("Using ranks: " + ", ".join([str(rank) for rank in include_ranks]))
     if single_process:
         log.info(
             "Only one process specified so using poker_ai.ai.singleprocess."
