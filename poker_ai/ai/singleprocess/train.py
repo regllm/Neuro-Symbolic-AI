@@ -94,7 +94,8 @@ def simple_search(
                 n_players,
                 card_info_lut,
                 lut_path=lut_path,
-                pickle_dir=pickle_dir
+                pickle_dir=pickle_dir,
+                include_ranks=include_ranks,
             )
             card_info_lut = state.card_info_lut
             if t > update_threshold and t % strategy_interval == 0:
