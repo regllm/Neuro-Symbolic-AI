@@ -33,6 +33,7 @@ Options:
   --help                         Show this message and exit.
 """
 import click
+from memory_profiler import profile
 
 from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
 
@@ -117,6 +118,7 @@ from poker_ai.clustering.card_info_lut_builder import CardInfoLutBuilder
         "centroids."
     )
 )
+@profile
 def cluster(
     low_card_rank: int,
     high_card_rank: int,

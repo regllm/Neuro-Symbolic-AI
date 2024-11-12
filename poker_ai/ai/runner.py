@@ -59,6 +59,7 @@ from typing import Dict
 import click
 import joblib
 import yaml
+from memory_profiler import profile
 
 from poker_ai import utils
 from poker_ai.ai.multiprocess.server import Server
@@ -117,6 +118,22 @@ def resume(server_config_path: str):
 
 
 @train.command()
+@click.option(
+    "--low_card_rank",
+    default=2,
+    help=(
+        "The starting hand rank from 2 through 14 for the deck we want to "
+        "cluster. We recommend starting small."
+    )
+)
+@click.option(
+    "--high_card_rank",
+    default=14,
+    help=(
+        "The starting hand rank from 2 through 14 for the deck we want to "
+        "cluster. We recommend starting small."
+    )
+)
 @click.option(
     "--strategy_interval",
     default=20,
@@ -217,7 +234,10 @@ def resume(server_config_path: str):
     help="Do or don't synchronise the serialisation.",
 )
 @click.option("--nickname", default="", help="The nickname of the study.")
+@profile
 def start(
+    low_card_rank: int,
+    high_card_rank: int,
     strategy_interval: int,
     n_iterations: int,
     lcfr_threshold: int,
@@ -242,6 +262,7 @@ def start(
     save_path: Path = utils.io.create_dir(nickname)
     with open(save_path / "config.yaml", "w") as steam:
         yaml.dump(config, steam)
+    include_ranks = list(range(low_card_rank, high_card_rank - 1))
     if single_process:
         log.info(
             "Only one process specified so using poker_ai.ai.singleprocess."
@@ -261,6 +282,7 @@ def start(
             n_players=n_players,
             dump_iteration=dump_iteration,
             update_threshold=update_threshold,
+            include_ranks=include_ranks,
         )
     else:
         log.info(
