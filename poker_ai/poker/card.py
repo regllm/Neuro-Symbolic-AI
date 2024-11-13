@@ -42,11 +42,7 @@ class Card:
             )
         if suit not in get_all_suits():
             raise ValueError(f"suit {suit} must be in {get_all_suits()}")
-        self._rank = rank
-        self._suit = suit
-        rank_char = self._rank_to_char(rank)
-        suit_char = self.suit.lower()[0]
-        self._eval_card = EvaluationCard.new(f"{rank_char}{suit_char}")
+        self._card_id = self._rank_and_suit_to_card_id(rank, suit)
 
     def __repr__(self):
         """Pretty printing the object."""
@@ -54,7 +50,7 @@ class Card:
         return f"<Card card=[{self.rank} of {self.suit} {icon}]>"
 
     def __int__(self):
-        return self._eval_card
+        return self.eval_card
 
     def __lt__(self, other):
         return self.rank < other.rank
@@ -83,23 +79,52 @@ class Card:
 
     @property
     def eval_card(self) -> EvaluationCard:
-        """Return an `EvaluationCard` for use in the `Evaluator`."""
-        return self._eval_card
+        rank, suit = self._card_id_to_rank_and_suit(self._card_id)
+        rank_char = self._rank_to_char(rank)
+        suit_char = self.suit.lower()[0]
+        return EvaluationCard.new(f"{rank_char}{suit_char}")
 
     @property
     def rank_int(self) -> int:
         """Get the rank as an int"""
-        return self._rank
+        return self._card_id % 15
 
     @property
     def rank(self) -> str:
         """Get the rank as a string."""
-        return self._rank_to_str(self._rank)
+        return self._rank_to_str(self._card_id % 15)
 
     @property
     def suit(self) -> str:
         """Get the suit."""
-        return self._suit
+        suit_dict = {
+            0: "spades",
+            1: "diamonds",
+            2: "clubs",
+            3: "hearts",
+        }
+        return suit_dict[int(self._card_id // 15)]
+
+    def _rank_and_suit_to_card_id(self, rank, suit):
+        suit_dict = {
+            "spades": 0,
+            "diamonds": 1,
+            "clubs": 2,
+            "hearts": 3,
+        }
+        suit_index = suit_dict[suit]
+        return suit_index * 15 + rank
+
+    def _card_id_to_rank_and_suit(self, card_id):
+        suit_dict = {
+            0: "spades",
+            1: "diamonds",
+            2: "clubs",
+            3: "hearts",
+        }
+        rank = card_id % 15
+        suit = suit_dict[int(card_id // 15)]
+        return rank, suit
 
     def _str_to_rank(self, string: str) -> int:
         """Convert the string rank to the integer rank."""
@@ -166,7 +191,8 @@ class Card:
 
     def to_dict(self) -> Dict[str, Union[int, str]]:
         """Turn into dict."""
-        return dict(rank=self._rank, suit=self._suit)
+        rank, suit = self._card_id_to_rank_and_suit(self._card_id)
+        return dict(rank=rank, suit=suit)
 
     @staticmethod
     def from_dict(x: Dict[str, Union[int, str]]):
@@ -174,15 +200,4 @@ class Card:
         if set(x) != {"rank", "suit"}:
             raise NotImplementedError(f"Unrecognised dict {x}")
         return Card(rank=x["rank"], suit=x["suit"])
-
-    def to_dict(self) -> Dict[str, Union[int, str]]:
-        """Turn into dict."""
-        return dict(rank=self._rank, suit=self._suit)
-
-    @staticmethod
-    def from_dict(x: Dict[str, Union[int, str]]):
-        """From dict turn into class."""
-        if set(x) != {"rank", "suit"}:
-            raise NotImplementedError(f"Unrecognised dict {x}")
-        return Card(rank=x["rank"], suit=x["suit"])
-
+    
