@@ -44,6 +44,9 @@ class Card:
             raise ValueError(f"suit {suit} must be in {get_all_suits()}")
         self._rank = rank
         self._set_suit(suit)
+        rank_char = self._rank_to_char(rank)
+        suit_char = self.suit[0]
+        self._eval = EvaluationCard.new(f"{rank_char}{suit_char}")
 
     def __repr__(self):
         """Pretty printing the object."""
@@ -80,9 +83,7 @@ class Card:
 
     @property
     def eval_card(self) -> EvaluationCard:
-        rank_char = self._rank_to_char(self._rank)
-        suit_char = self._get_suit()[0]
-        return EvaluationCard.new(f"{rank_char}{suit_char}")
+        return self._eval
 
     @property
     def rank_int(self) -> int:
