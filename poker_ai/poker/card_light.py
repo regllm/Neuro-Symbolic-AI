@@ -43,10 +43,10 @@ class Card:
         if suit not in get_all_suits():
             raise ValueError(f"suit {suit} must be in {get_all_suits()}")
         self._rank = rank
-        self._suit = suit
+        self._set_suit(suit)
         rank_char = self._rank_to_char(rank)
-        suit_char = self.suit.lower()[0]
-        self._eval_card = EvaluationCard.new(f"{rank_char}{suit_char}")
+        suit_char = suit[0].lower()
+        self._eval = EvaluationCard.new(f"{rank_char}{suit_char}")
 
     def __repr__(self):
         """Pretty printing the object."""
@@ -54,22 +54,22 @@ class Card:
         return f"<Card card=[{self.rank} of {self.suit} {icon}]>"
 
     def __int__(self):
-        return self._eval_card
+        return self._eval
 
     def __lt__(self, other):
-        return self.rank < other.rank
+        return self._rank < other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __le__(self, other):
-        return self.rank <= other.rank
+        return self._rank <= other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __gt__(self, other):
-        return self.rank > other.rank
+        return self._rank > other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __ge__(self, other):
-        return self.rank >= other.rank
+        return self._rank >= other._rank
         # raise NotImplementedError("Boolean operations not supported")
 
     def __eq__(self, other):
@@ -83,8 +83,7 @@ class Card:
 
     @property
     def eval_card(self) -> EvaluationCard:
-        """Return an `EvaluationCard` for use in the `Evaluator`."""
-        return self._eval_card
+        return self._eval
 
     @property
     def rank_int(self) -> int:
@@ -99,7 +98,27 @@ class Card:
     @property
     def suit(self) -> str:
         """Get the suit."""
-        return self._suit
+        return self._get_suit()
+    
+    def _set_suit(self, suit):
+        if suit[0] == "s":
+            self._suit = 0
+        elif suit[0] == "d":
+            self._suit = 1
+        elif suit[0] == "c":
+            self._suit = 2
+        else:
+            self._suit = 3
+    
+    def _get_suit(self):
+        if self._suit == 0:
+            return "spades"
+        elif self._suit == 1:
+            return "diamonds"
+        elif self._suit == 2:
+            return "clubs"
+        else:
+            return "hearts"
 
     def _str_to_rank(self, string: str) -> int:
         """Convert the string rank to the integer rank."""
@@ -166,7 +185,8 @@ class Card:
 
     def to_dict(self) -> Dict[str, Union[int, str]]:
         """Turn into dict."""
-        return dict(rank=self._rank, suit=self._suit)
+        rank, suit = self._card_id_to_rank_and_suit(self._card_id)
+        return dict(rank=rank, suit=suit)
 
     @staticmethod
     def from_dict(x: Dict[str, Union[int, str]]):
@@ -174,14 +194,4 @@ class Card:
         if set(x) != {"rank", "suit"}:
             raise NotImplementedError(f"Unrecognised dict {x}")
         return Card(rank=x["rank"], suit=x["suit"])
-
-    def to_dict(self) -> Dict[str, Union[int, str]]:
-        """Turn into dict."""
-        return dict(rank=self._rank, suit=self._suit)
-
-    @staticmethod
-    def from_dict(x: Dict[str, Union[int, str]]):
-        """From dict turn into class."""
-        if set(x) != {"rank", "suit"}:
-            raise NotImplementedError(f"Unrecognised dict {x}")
-        return Card(rank=x["rank"], suit=x["suit"])
+    
