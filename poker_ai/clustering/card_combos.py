@@ -26,7 +26,8 @@ class CardCombos:
         self._cards = np.array(
             [Card(rank, suit) for suit in suits for rank in ranks]
         )
-        print("CARDS!", self._cards)
+        # DEBUG
+        print("CARDS:", self._cards)
         self.starting_hands = self.get_card_combos(2)
         self.flop = self.create_info_combos(
             self.starting_hands, self.get_card_combos(3)
@@ -39,6 +40,8 @@ class CardCombos:
         self.river = self.create_info_combos(
             self.starting_hands, self.get_card_combos(5)
         )
+        # DEBUG
+        print("SIZE OF RIVER:", len(self.river))
         log.info("created river")
 
     def get_card_combos(self, num_cards: int) -> np.ndarray:
@@ -96,9 +99,7 @@ class CardCombos:
                 key=operator.attrgetter("eval_card"),
                 reverse=True,
             )
-            # DEBUG
             for public_combo in publics:
-            # for public_combo in publics[:10]:
                 # Descending sort public_combo.
                 sorted_public_combo: List[Card] = sorted(
                     list(public_combo),
