@@ -88,8 +88,13 @@ class ShortDeckPokerState:
                 f"were provided."
             )
         self._pickle_dir = pickle_dir
+        # Store low and high card rank in the instance.
+        self._low_card_rank = min(include_ranks)
+        self._high_card_rank = max(include_ranks)
         if load_card_lut:
-            self.card_info_lut = self.load_card_lut(lut_path, self._pickle_dir)
+            self.card_info_lut = self.load_card_lut(
+                lut_path, self._pickle_dir, self._low_card_rank, self._high_card_rank
+            )
         else:
             self.card_info_lut = {}
         # Get a reference of the pot from the first player.
@@ -240,7 +245,9 @@ class ShortDeckPokerState:
     @staticmethod
     def load_card_lut(
         lut_path: str = ".",
-        pickle_dir: bool = False
+        pickle_dir: bool = False,
+        low_card_rank: int = 2,
+        high_card_rank: int = 14,
     ) -> Dict[str, Dict[Tuple[int, ...], str]]:
         """
         Load card information lookup table.
@@ -281,7 +288,8 @@ class ShortDeckPokerState:
                     card_info_lut[betting_stage] = joblib.load(fp)
         elif lut_path:
             logger.info(f"Loading card from single file at path: {lut_path}")
-            card_info_lut = joblib.load(lut_path + '/card_info_lut.joblib')
+            filename = f"card_info_lut_{low_card_rank}_to_{high_card_rank}.joblib"
+            card_info_lut = joblib.load(lut_path + "/" + filename)
         else:
             card_info_lut = {}
         return card_info_lut
