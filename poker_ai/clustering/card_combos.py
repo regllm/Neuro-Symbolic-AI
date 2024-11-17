@@ -111,12 +111,7 @@ class CardCombos:
             for public_combo in publics:
                 if not np.any(np.isin(start_combo, public_combo)):
                     # Combine hand and public cards.
-                    cursor = 0
-                    for card in reversed(start_combo):
-                        our_cards[count][cursor] = card
-                        cursor += 1
-                    for card in reversed(public_combo):
-                        our_cards[count][cursor] = card
-                        cursor += 1
+                    our_cards[count][:2] = start_combo[::-1]
+                    our_cards[count][2:] = public_combo[::-1]
                     count += 1
         return our_cards[:count]
