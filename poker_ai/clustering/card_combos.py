@@ -8,6 +8,7 @@ from tqdm import tqdm
 
 from poker_ai.poker.card import Card
 from poker_ai.poker.deck import get_all_suits
+from poker_ai.poker.evaluation.eval_card import EvaluationCard
 
 
 log = logging.getLogger("poker_ai.clustering.runner")
@@ -21,14 +22,22 @@ class CardCombos:
     ):
         super().__init__()
         # Sort for caching.
-        suits: List[str] = sorted(list(get_all_suits()))
-        ranks: List[int] = sorted(list(range(low_card_rank, high_card_rank + 1)))
+        eval_suits = "shdc"
+        eval_ranks: List[str] = [
+            EvaluationCard.STR_RANKS[rank - 2]
+            for rank in range(low_card_rank, high_card_rank + 1)
+        ]
+        
         self._cards = np.array(
-            [Card(rank, suit) for suit in suits for rank in ranks]
+            [
+                EvaluationCard.new(rank_char + suit_char)
+                for suit_char in eval_suits
+                for rank_char in eval_ranks
+            ],
         )
-        # DEBUG
-        print("CARDS:", self._cards)
+
         self.starting_hands = self.get_card_combos(2)
+
         self.flop = self.create_info_combos(
             self.starting_hands, self.get_card_combos(3)
         )
@@ -40,8 +49,6 @@ class CardCombos:
         self.river = self.create_info_combos(
             self.starting_hands, self.get_card_combos(5)
         )
-        # DEBUG
-        print("SIZE OF RIVER:", len(self.river))
         log.info("created river")
 
     def get_card_combos(self, num_cards: int) -> np.ndarray:
@@ -57,7 +64,10 @@ class CardCombos:
         -------
             Combos of cards (Card) -> np.ndarray
         """
-        return np.array([c for c in combinations(self._cards, num_cards)])
+        combos = np.array([c for c in combinations(self._cards, num_cards)])
+        # Sort each combo in ascending orders.
+        combos.sort(1)
+        return combos
 
     def create_info_combos(
         self, start_combos: np.ndarray, publics: np.ndarray
@@ -87,29 +97,26 @@ class CardCombos:
             betting_stage = "river"
         else:
             betting_stage = "unknown"
-        our_cards: List[Card] = []
-        for combos in tqdm(
+        
+        max_count = len(start_combos) * len(publics)
+        hand_size = len(start_combos[0]) + len(publics[0])
+        our_cards = np.zeros(max_count, hand_size)
+        count = 0
+
+        for start_combo in tqdm(
             start_combos,
             dynamic_ncols=True,
             desc=f"Creating {betting_stage} info combos",
         ):
-            # Descending sort combos.
-            sorted_combos: List[Card] = sorted(
-                list(combos),
-                key=operator.attrgetter("eval_card"),
-                reverse=True,
-            )
             for public_combo in publics:
-                # Descending sort public_combo.
-                sorted_public_combo: List[Card] = sorted(
-                    list(public_combo),
-                    key=operator.attrgetter("eval_card"),
-                    reverse=True,
-                )
-                if not np.any(np.isin(sorted_combos, sorted_public_combo)):
+                if not np.any(np.isin(start_combo, public_combo)):
                     # Combine hand and public cards.
-                    hand: np.array = np.array(
-                        sorted_combos + sorted_public_combo
-                    )
-                    our_cards.append(hand)
-        return np.array(our_cards)
+                    cursor = 0
+                    for card in reversed(start_combo):
+                        our_cards[count][cursor] = card
+                        cursor += 1
+                    for card in reversed(public_combo):
+                        our_cards[count][cursor] = card
+                        cursor += 1
+                    count += 1
+        return our_cards[:count]
