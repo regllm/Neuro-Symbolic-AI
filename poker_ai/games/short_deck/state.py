@@ -405,10 +405,8 @@ class ShortDeckPokerState:
             key=operator.attrgetter("eval_card"),
             reverse=True,
         )
-        if self._pickle_dir:
-            lookup_cards = tuple([card.eval_card for card in cards])
-        else:
-            lookup_cards = tuple(cards)
+        
+        lookup_cards = tuple([card.eval_card for card in cards])
         try:
             cards_cluster = self.card_info_lut[self._betting_stage][lookup_cards]
         except KeyError:
