@@ -1,13 +1,13 @@
 import logging
 import math
-from typing import List, Optional
+from pathlib import Path
+from typing import List
 from itertools import combinations
 
+import joblib
 import numpy as np
 from tqdm import tqdm
 
-from poker_ai.poker.card import Card
-from poker_ai.poker.deck import get_all_suits
 from poker_ai.poker.evaluation.eval_card import EvaluationCard
 
 
@@ -18,7 +18,7 @@ class CardCombos:
     """This class stores combinations of cards (histories) per street."""
 
     def __init__(
-        self, low_card_rank: int, high_card_rank: int,
+        self, low_card_rank: int, high_card_rank: int, save_dir: str
     ):
         super().__init__()
         # Sort for caching.
@@ -40,18 +40,37 @@ class CardCombos:
 
         self.starting_hands = self.get_card_combos(2)
 
-        self.flop = self.create_info_combos(
-            self.starting_hands, 3
-        )
-        log.info("created flop")
-        self.turn = self.create_info_combos(
-            self.starting_hands, 4
-        )
-        log.info("created turn")
-        self.river = self.create_info_combos(
-            self.starting_hands, 5
-        )
-        log.info("created river")
+        card_combos_flop_filename = f"card_combos_flop_{low_card_rank}_to_{high_card_rank}.joblib"
+        self.card_combos_flop_path: Path = Path(save_dir) / card_combos_flop_filename
+        card_combos_turn_filename = f"card_combos_turn_{low_card_rank}_to_{high_card_rank}.joblib"
+        self.card_combos_turn_path: Path = Path(save_dir) / card_combos_turn_filename
+        card_combos_river_filename = f"card_combos_river_{low_card_rank}_to_{high_card_rank}.joblib"
+        self.card_combos_river_path: Path = Path(save_dir) / card_combos_river_filename
+
+        try:
+            self.flop = joblib.load(self.card_combos_flop_path)
+            log.info("loaded flop")
+        except FileNotFoundError:
+            self.flop = self.create_info_combos(
+                self.starting_hands, 3
+            )
+            log.info("created flop")
+        try:
+            self.turn = joblib.load(self.card_combos_turn_path)
+            log.info("loaded turn")
+        except FileNotFoundError:
+            self.turn = self.create_info_combos(
+                self.starting_hands, 4
+            )
+            log.info("created turn")
+        try:
+            self.river = joblib.load(self.card_combos_river_path)
+            log.info("loaded river")
+        except FileNotFoundError:
+            self.river = self.create_info_combos(
+                self.starting_hands, 5
+            )
+            log.info("created river")
 
     def get_card_combos(
         self, num_cards: int
