@@ -93,19 +93,22 @@ class CardInfoLutBuilder(CardCombos):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
         start = time.time()
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            self._river_ehs = list(
-                tqdm(
-                    executor.map(
-                        self.process_river_ehs,
-                        self.river,
-                        # chunksize=len(self.river) // 160,
-                        chunksize=1,  # To prevent memory overflow
-                    ),
-                    total=len(self.river),
-                    ascii=" >=",
-                )
-            )
+        # with concurrent.futures.ProcessPoolExecutor() as executor:
+        #     self._river_ehs = list(
+        #         tqdm(
+        #             executor.map(
+        #                 self.process_river_ehs,
+        #                 self.river,
+        #                 # chunksize=len(self.river) // 160,
+        #                 chunksize=1,  # To prevent memory overflow
+        #             ),
+        #             total=len(self.river),
+        #             ascii=" >=",
+        #         )
+        #     )
+        self._river_ehs = []
+        for e in tqdm(self.river, ascii=" >="):
+            self._river_ehs.append(self.process_river_ehs(e))
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=self._river_ehs
         )
