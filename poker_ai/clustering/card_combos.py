@@ -58,12 +58,12 @@ class CardCombos:
         if os.path.exists(self.card_combos_flop_path) and not os.path.exists(self.card_combos_flop_csv_path):
             flop = joblib.load(self.card_combos_flop_path)
             log.info("converting flop")
-            with open(card_combos_flop_csv_filename, "w") as f:
+            with open(card_combos_flop_csv_file_path, "w") as f:
                 for row in tqdm(flop, ascii=" >="):
                     f.write(",".join([str(int(x)) for x in row]) + "\n")
             os.remove(self.card_combos_flop_path)
         elif not os.path.exists(self.card_combos_flop_csv_path):
-            self.write_info_combos(self.starting_hands, 3, card_combos_flop_csv_filename)
+            self.write_info_combos(self.starting_hands, 3, card_combos_flop_csv_file_path)
             log.info("created flop")
         else:
             log.info("using pre-written flop")
@@ -71,12 +71,12 @@ class CardCombos:
         if os.path.exists(self.card_combos_turn_path) and not os.path.exists(self.card_combos_turn_csv_path):
             turn = joblib.load(self.card_combos_turn_path)
             log.info("converting turn")
-            with open(card_combos_turn_csv_filename, "w") as f:
+            with open(card_combos_turn_csv_file_path, "w") as f:
                 for row in tqdm(turn, ascii=" >="):
                     f.write(",".join([str(int(x)) for x in row]) + "\n")
             os.remove(self.card_combos_turn_path)
         elif not os.path.exists(self.card_combos_turn_csv_path):
-            self.write_info_combos(self.starting_hands, 3, card_combos_turn_csv_filename)
+            self.write_info_combos(self.starting_hands, 3, card_combos_turn_csv_file_path)
             log.info("created turn")
         else:
             log.info("using pre-written turn")
@@ -84,12 +84,12 @@ class CardCombos:
         if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
             river = joblib.load(self.card_combos_river_path)
             log.info("converting river")
-            with open(card_combos_river_csv_filename, "w") as f:
+            with open(card_combos_river_csv_file_path, "w") as f:
                 for row in tqdm(river, ascii=" >="):
                     f.write(",".join([str(int(x)) for x in row]) + "\n")
             os.remove(self.card_combos_river_path)
         elif not os.path.exists(self.card_combos_river_csv_path):
-            self.write_info_combos(self.starting_hands, 3, card_combos_river_csv_filename)
+            self.write_info_combos(self.starting_hands, 3, card_combos_river_csv_file_path)
             log.info("created river")
         else:
             log.info("using pre-written river")
