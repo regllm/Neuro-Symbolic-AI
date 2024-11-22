@@ -92,6 +92,12 @@ class CardInfoLutBuilder(CardCombos):
         end = time.time()
         log.info(f"Finished computation of clusters - took {end - start} seconds.")
 
+    def _river_ehs_iter(self):
+        river_ehs = open(self.ehs_flop_csv_path, "w")
+        for line in river_ehs:
+            yield [float(x) for x in line.split(",")]
+        river_ehs.close()
+
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
@@ -149,7 +155,7 @@ class CardInfoLutBuilder(CardCombos):
             river_ehs.close()
         
         self.centroids["river"], self._river_clusters = self.cluster(
-            num_clusters=n_river_clusters, X=self._river_ehs
+            num_clusters=n_river_clusters, X=self._river_ehs_iter()
         )
         end = time.time()
         log.info(
