@@ -69,7 +69,7 @@ class CardCombos:
                 for row in tqdm(flop, ascii=" >="):
                     f.write(",".join([str(int(x)) for x in row]) + "\n")
             os.remove(self.card_combos_flop_path)
-        elif not os.path.exists(self.card_combos_flop_csvself._path):
+        elif not os.path.exists(self.card_combos_flop_csv_path):
             self.write_info_combos(self.starting_hands, 3, self.card_combos_flop_csv_path)
             log.info("created flop")
         else:
