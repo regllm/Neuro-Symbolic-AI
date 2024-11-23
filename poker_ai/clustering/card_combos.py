@@ -111,7 +111,11 @@ class CardCombos:
             log.info("converting river")
             with open(self.card_combos_river_csv_path, "w") as f:
                 for row in tqdm(river, ascii=" >="):
-                    f.write(",".join([str(int(x)) for x in row]) + "\n")
+                    for i in range(len(row)):
+                        f.write(str(int(row[i])))
+                        if i < len(row) - 1:
+                            f.write(",")
+                    f.write("\n")
         elif not os.path.exists(self.card_combos_river_csv_path):
             self.write_info_combos(self.starting_hands, 5, self.card_combos_river_csv_path)
             log.info("created river")
