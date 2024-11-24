@@ -65,6 +65,7 @@ class CardCombos:
         # ehs_river_csv_filename = f"ehs_river_csv_{low_card_rank}_to_{high_card_rank}.csv"
         # self.ehs_river_csv_path: Path = Path(save_dir) / ehs_river_csv_filename
 
+    def load_river(self):
         # if os.path.exists(self.card_combos_river_path) and not os.path.exists(self.card_combos_river_csv_path):
         #     river = joblib.load(self.card_combos_river_path)
         #     log.info("converting river")
@@ -83,6 +84,7 @@ class CardCombos:
 
         self.river = self.create_info_combos_iter(self.starting_hands, 5)
 
+    def load_turn(self):
         # if os.path.exists(self.card_combos_turn_path) and not os.path.exists(self.card_combos_turn_csv_path):
         #     turn = joblib.load(self.card_combos_turn_path)
         #     log.info("converting turn")
@@ -105,6 +107,7 @@ class CardCombos:
             )
             joblib.dump(self.turn, self.card_combos_turn_path)
         
+    def load_flop(self):
         # if os.path.exists(self.card_combos_flop_path) and not os.path.exists(self.card_combos_flop_csv_path):
         #     flop = joblib.load(self.card_combos_flop_path)
         #     log.info("converting flop")
