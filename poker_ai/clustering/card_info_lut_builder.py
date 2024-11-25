@@ -166,7 +166,7 @@ class CardInfoLutBuilder(CardCombos):
             log.info("loaded river ehs")
         except FileNotFoundError:
             self._river_ehs = np.zeros((river_size, 3))
-            batch_size = 50_000
+            batch_size = 100
             cursor = 0
             while True:
                 done = False
