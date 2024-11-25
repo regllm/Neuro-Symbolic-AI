@@ -164,7 +164,7 @@ class CardCombos:
                 ]
             )
             for public_combo in publics:
-                combo = np.zeros(hand_size)
+                combo = np.zeros(hand_size, dtype=int)
                 combo[:2] = start_combo[::-1]
                 combo[2:] = public_combo[::-1]
                 

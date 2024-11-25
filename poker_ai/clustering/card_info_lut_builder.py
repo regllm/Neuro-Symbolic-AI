@@ -165,31 +165,33 @@ class CardInfoLutBuilder(CardCombos):
             self._river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            self._river_ehs = np.zeros((river_size, 3))
-            batch_size = 100
-            cursor = 0
-            while True:
-                done = False
-                with concurrent.futures.ProcessPoolExecutor() as executor:
-                    river_batch = []
-                    for _ in range(batch_size):
-                        try:
-                            river_batch.append(next(self.river))
-                        except StopIteration:
-                            done = True
-                            break
-                    curr_batch_size = len(river_batch)
-                    print("RIVER BATCH")
-                    print(river_batch)
-                    batch_result = executor.map(
-                        self.process_river_ehs, river_batch, chunksize=9600
-                    )
-                    for i, v in batch_result:
-                        self._river_ehs[cursor + i] = v
-                    cursor += curr_batch_size
-                if done:
-                    break
-            joblib.dump(self._river_ehs, self.ehs_river_path)
+            with tqdm(total=river_size) as pbar:
+                self._river_ehs = np.zeros((river_size, 3), dtype=int)
+                batch_size = 100
+                cursor = 0
+                while True:
+                    done = False
+                    with concurrent.futures.ProcessPoolExecutor() as executor:
+                        river_batch = []
+                        for _ in range(batch_size):
+                            try:
+                                river_batch.append(next(self.river))
+                            except StopIteration:
+                                done = True
+                                break
+                        curr_batch_size = len(river_batch)
+                        print("RIVER BATCH")
+                        print(river_batch)
+                        batch_result = executor.map(
+                            self.process_river_ehs, river_batch, chunksize=9600
+                        )
+                        for i, v in batch_result:
+                            self._river_ehs[cursor + i] = v
+                        cursor += curr_batch_size
+                        pbar.update(curr_batch_size)
+                    if done:
+                        break
+                joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=tqdm(self._river_ehs, total=river_size, ascii=" >=")
