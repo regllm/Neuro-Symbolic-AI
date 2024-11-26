@@ -174,13 +174,12 @@ class CardInfoLutBuilder(CardCombos):
                     river_batch = []
                     for _ in range(batch_size):
                         try:
-                            river_batch.append(next(self.river))
+                            river_batch.append(int(next(self.river)))
                         except StopIteration:
                             done = True
                             break
                     curr_batch_size = len(river_batch)
-                    print("RIVER BATCH")
-                    print(river_batch)
+                    
                     with concurrent.futures.ProcessPoolExecutor() as executor:
                         batch_result = executor.map(
                             self.process_river_ehs, river_batch, chunksize=9600
