@@ -101,6 +101,9 @@ class CardInfoLutBuilder(CardCombos):
     #         yield [float(x) for x in line.split(",")]
     #     river_ehs.close()
 
+    def dummy(self, x):
+        return np.zeros(3)
+
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
         log.info("Starting computation of river clusters.")
@@ -182,8 +185,11 @@ class CardInfoLutBuilder(CardCombos):
                         river_batch = river_batch[:batch_cursor]
                     
                     with concurrent.futures.ProcessPoolExecutor() as executor:
+                        # batch_result = executor.map(
+                        #     self.process_river_ehs, river_batch, chunksize=9600
+                        # )
                         batch_result = executor.map(
-                            self.process_river_ehs, river_batch, chunksize=9600
+                            self.dummy, river_batch, chunksize=9600
                         )
                         for i, v in batch_result:
                             self._river_ehs[cursor + i] = v
