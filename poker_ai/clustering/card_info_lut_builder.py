@@ -170,15 +170,16 @@ class CardInfoLutBuilder(CardCombos):
                 batch_size = 100
                 cursor = 0
                 while True:
-                    done = False
-                    river_batch = []
+                    batch_cursor = 0
+                    river_batch = np.zeros((batch_size, 7), dtype=int)
                     for _ in range(batch_size):
                         try:
-                            river_batch.append(int(next(self.river)))
+                            river_batch[batch_cursor] = next(self.river)
+                            batch_cursor += 1
                         except StopIteration:
-                            done = True
                             break
-                    curr_batch_size = len(river_batch)
+                    if batch_cursor < batch_size:
+                        river_batch = river_batch[:batch_cursor]
                     
                     with concurrent.futures.ProcessPoolExecutor() as executor:
                         batch_result = executor.map(
@@ -186,9 +187,9 @@ class CardInfoLutBuilder(CardCombos):
                         )
                         for i, v in batch_result:
                             self._river_ehs[cursor + i] = v
-                        cursor += curr_batch_size
-                        pbar.update(curr_batch_size)
-                    if done:
+                        cursor += batch_cursor
+                        pbar.update(batch_cursor)
+                    if batch_cursor < batch_size:
                         break
                 joblib.dump(self._river_ehs, self.ehs_river_path)
         
