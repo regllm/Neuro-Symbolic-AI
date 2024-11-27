@@ -189,7 +189,7 @@ class CardInfoLutBuilder(CardCombos):
                         #     self.process_river_ehs, river_batch, chunksize=9600
                         # )
                         batch_result = executor.map(
-                            self.dummy, river_batch, chunksize=9600
+                            self.process_river_ehs, river_batch, chunksize=9600
                         )
                         self._river_ehs[cursor:cursor + batch_cursor] = batch_result
 
