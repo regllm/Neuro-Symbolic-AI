@@ -77,7 +77,7 @@ class CardInfoLutBuilder(CardCombos):
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
         if "river" not in self.card_info_lut:
-            self.load_river()
+            # self.load_river()
             self.card_info_lut["river"] = self._compute_river_clusters(
                 n_river_clusters,
             )
@@ -101,9 +101,6 @@ class CardInfoLutBuilder(CardCombos):
     #     for line in river_ehs:
     #         yield [float(x) for x in line.split(",")]
     #     river_ehs.close()
-
-    def dummy(self, x):
-        return np.zeros(3)
 
     def _compute_river_clusters(self, n_river_clusters: int):
         """Compute river clusters and create lookup table."""
@@ -164,6 +161,7 @@ class CardInfoLutBuilder(CardCombos):
         #     river.close()
         #     river_ehs.close()
 
+        ## Custom batched
         # river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
         # try:
         #     self._river_ehs = joblib.load(self.ehs_river_path)
@@ -203,36 +201,36 @@ class CardInfoLutBuilder(CardCombos):
             self._river_ehs = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            with tqdm(total=river_size) as pbar:
-                self._river_ehs = np.zeros((river_size, 3), dtype=int)
+            # with tqdm(total=river_size) as pbar:
+            self._river_ehs = np.zeros((river_size, 3), dtype=int)
 
-                cursor = 0
-                for start_combo in self.starting_hands:
-                    publics_size = math.comb(len(self._cards) - 2, 5)
-                    batch_cards = np.zeros((publics_size, 7))
-                    publics = np.array(
-                        [
-                            c for c in combinations(
-                                [c for c in self._sorted_cards if c not in start_combo],
-                                5,
-                            )
-                        ]
-                    )
-                    for i, public_combo in enumerate(publics):
-                        batch_cards[i][:2] = start_combo[::-1]
-                        batch_cards[i][2:] = public_combo[::-1]
-                    
-                    with concurrent.futures.ProcessPoolExecutor() as executor:
-                        batch_result = executor.map(
-                            self.process_river_ehs, batch_cards, chunksize=9600
+            cursor = 0
+            for start_combo in self.starting_hands:
+                publics_size = math.comb(len(self._cards) - 2, 5)
+                batch_cards = np.zeros((publics_size, 7))
+                publics = np.array(
+                    [
+                        c for c in combinations(
+                            [c for c in self._sorted_cards if c not in start_combo],
+                            5,
                         )
-                        print("BATCH RESULT", list(batch_result))
-                        self._river_ehs[cursor:cursor + publics_size] = batch_result
+                    ]
+                )
+                for i, public_combo in enumerate(publics):
+                    batch_cards[i][:2] = start_combo[::-1]
+                    batch_cards[i][2:] = public_combo[::-1]
+                
+                with concurrent.futures.ProcessPoolExecutor() as executor:
+                    batch_result = executor.map(
+                        self.process_river_ehs, batch_cards, chunksize=9600
+                    )
+                    print("BATCH RESULT", list(batch_result))
+                    self._river_ehs[cursor:cursor + publics_size] = batch_result
 
-                        cursor += publics_size
-                        pbar.update(publics_size)
+                    cursor += publics_size
+                        # pbar.update(publics_size)
                     
-                joblib.dump(self._river_ehs, self.ehs_river_path)
+            joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=tqdm(self._river_ehs, total=river_size, ascii=" >=")
