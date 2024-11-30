@@ -120,7 +120,8 @@ class CardInfoLutBuilder(CardCombos):
         process.start()
         process.join()
         print("RESULT")
-        print(result)
+        for i in result:
+            print(i)
 
         ## Original
         # with concurrent.futures.ProcessPoolExecutor() as executor:
