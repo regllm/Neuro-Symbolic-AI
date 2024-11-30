@@ -138,7 +138,7 @@ class CardInfoLutBuilder(CardCombos):
                         result[(start + i) * 3 + 2] = ehs[2]
                 
                 worker_count = 96
-                batch_size = 100
+                batch_size = 1000
                 cursor = 0
 
                 while True:
@@ -184,80 +184,6 @@ class CardInfoLutBuilder(CardCombos):
         #             ascii=" >=",
         #         )
         #     )
-
-        # self._river_ehs = []
-        # for e in tqdm(self.river, ascii=" >="):
-        #     if len(river_batch) < batch_size:
-        #         river_batch.append(e)
-        #     self._river_ehs.append(self.process_river_ehs(e))
-        
-        ## Mini batched
-        # batch_size = 960
-        # loop_count = len(self.river) // batch_size + 1
-        # self._river_ehs = np.zeros(len(self.river))
-        # for i in tqdm(range(loop_count), ascii=" >="):
-        #     start = i * batch_size
-        #     end = min(len(self.river), start + batch_size)
-        #     river_batch = self.river[start:end]
-        #     with concurrent.futures.ProcessPoolExecutor() as executor:
-        #         results = executor.map(
-        #             self.process_river_ehs,
-        #             river_batch,
-        #             max_workers=96,
-        #         )
-        #         self._river_ehs[start:end] = results
-        
-        ## File-based
-        # if not os.path.exists(self.ehs_flop_csv_path):
-        #     river = open(self.card_combos_river_csv_path, "r")
-        #     river_ehs = open(self.ehs_flop_csv_path, "w")
-        #     river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
-            
-        #     with multiprocessing.Pool() as pool:
-        #         for ehs in tqdm(
-        #             pool.imap(self.process_river_ehs, river, chunksize=960),
-        #             ascii=" >=",
-        #             total=river_size,
-        #         ):
-        #             river_ehs.write(",".join([float(x) for x in ehs]))
-            
-        #     river.close()
-        #     river_ehs.close()
-
-        ## Custom batched
-        # river_size = math.comb(len(self._cards), 2) * math.comb(len(self._cards) - 2, 5)
-        # try:
-        #     self._river_ehs = joblib.load(self.ehs_river_path)
-        #     log.info("loaded river ehs")
-        # except FileNotFoundError:
-        #     with tqdm(total=river_size) as pbar:
-        #         self._river_ehs = np.zeros((river_size, 3), dtype=int)
-        #         batch_size = 100
-        #         cursor = 0
-        #         while True:
-        #             batch_cursor = 0
-        #             river_batch = np.zeros((batch_size, 7), dtype=int)
-        #             for _ in range(batch_size):
-        #                 try:
-        #                     river_batch[batch_cursor] = next(self.river)
-        #                     batch_cursor += 1
-        #                 except StopIteration:
-        #                     break
-        #             if batch_cursor < batch_size:
-        #                 river_batch = river_batch[:batch_cursor]
-                    
-        #             with concurrent.futures.ProcessPoolExecutor() as executor:
-        #                 batch_result = executor.map(
-        #                     self.process_river_ehs, river_batch, chunksize=9600
-        #                 )
-        #                 print("BATCH RESULT", list(batch_result))
-        #                 self._river_ehs[cursor:cursor + batch_cursor] = batch_result
-
-        #                 cursor += batch_cursor
-        #                 pbar.update(batch_cursor)
-        #             if batch_cursor < batch_size:
-        #                 break
-        #         joblib.dump(self._river_ehs, self.ehs_river_path)
         
         self.centroids["river"], self._river_clusters = self.cluster(
             num_clusters=n_river_clusters, X=tqdm(self._river_ehs_flat_iter(), total=river_size, ascii=" >=")
