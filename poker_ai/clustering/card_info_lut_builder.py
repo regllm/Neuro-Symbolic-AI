@@ -116,6 +116,12 @@ class CardInfoLutBuilder(CardCombos):
             for i, x in enumerate(batch):
                 result[i] = self.process_river_ehs(x)
 
+        r = next(self.river)
+        print("RIVER")
+        print(r)
+        a = self.process_river_ehs(r)
+        print("RIVER A")
+        print(a)
         process = multiprocessing.Process(target=process_all, args=(batch, result))
         process.start()
         process.join()
