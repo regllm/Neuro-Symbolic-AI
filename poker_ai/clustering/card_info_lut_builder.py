@@ -127,7 +127,7 @@ class CardInfoLutBuilder(CardCombos):
             self._river_ehs_flat = joblib.load(self.ehs_river_path)
             log.info("loaded river ehs")
         except FileNotFoundError:
-            with tqdm(total=river_size) as pbar:
+            with tqdm(total=river_size, ascii=" >=") as pbar:
                 self._river_ehs_flat = multiprocessing.Array(
                     ctypes.c_float, river_size * 3
                 )
@@ -140,7 +140,7 @@ class CardInfoLutBuilder(CardCombos):
                         result[(start + i) * 3 + 2] = ehs[2]
                 
                 worker_count = multiprocessing.cpu_count()
-                batch_size = min(10_000, river_size // worker_count)
+                batch_size = min(100_000, river_size // worker_count)
                 cursor = 0
 
                 while True:
