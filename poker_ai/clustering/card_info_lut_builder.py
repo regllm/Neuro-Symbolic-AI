@@ -18,6 +18,7 @@ from tqdm import tqdm
 from poker_ai.clustering.card_combos import CardCombos
 from poker_ai.clustering.game_utility import GameUtility
 from poker_ai.clustering.preflop import compute_preflop_lossless_abstraction
+from poker_ai.poker.evaluation import Evaluator
 
 log = logging.getLogger("poker_ai.clustering.runner")
 
@@ -44,6 +45,7 @@ class CardInfoLutBuilder(CardCombos):
         high_card_rank: int,
         save_dir: str,
     ):
+        self._evaluator = Evaluator()
         self.n_simulations_river = n_simulations_river
         self.n_simulations_turn = n_simulations_turn
         self.n_simulations_flop = n_simulations_flop
@@ -77,9 +79,11 @@ class CardInfoLutBuilder(CardCombos):
                 builder=self
             )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
-        if "flop" not in self.card_info_lut:
-            self.load_flop()
-            self.card_info_lut["flop"] = self._compute_flop_clusters(n_flop_clusters)
+        if "river" not in self.card_info_lut:
+            self.load_river()
+            self.card_info_lut["river"] = self._compute_river_clusters(
+                n_river_clusters,
+            )
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         if "turn" not in self.card_info_lut:
@@ -87,11 +91,9 @@ class CardInfoLutBuilder(CardCombos):
             self.card_info_lut["turn"] = self._compute_turn_clusters(n_turn_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
-        if "river" not in self.card_info_lut:
-            self.load_river()
-            self.card_info_lut["river"] = self._compute_river_clusters(
-                n_river_clusters,
-            )
+        if "flop" not in self.card_info_lut:
+            self.load_flop()
+            self.card_info_lut["flop"] = self._compute_flop_clusters(n_flop_clusters)
             joblib.dump(self.card_info_lut, self.card_info_lut_path)
             joblib.dump(self.centroids, self.centroid_path)
         end = time.time()
@@ -322,11 +324,25 @@ class CardInfoLutBuilder(CardCombos):
         -------
             Expected hand strength
         """
-        our_hand = public[:2]
-        board = public[2:7]
-        # Get expected hand strength
-        game = GameUtility(our_hand=our_hand, board=board, cards=self._cards)
-        return self.simulate_get_ehs(game)
+        # our_hand = public[:2]
+        # board = public[2:7]
+
+        our_hand_rank = self._evaluator._seven(public)
+        available_cards = np.array([c for c in self._cards if c not in public])
+        
+        prob_unit = 1 / self.n_simulations_river
+        ehs: np.ndarray = np.zeros(3)
+        opp_hand = public.copy()
+        for _ in range(self.n_simulations_river):
+            opp_hand[:2] = np.random.choice(available_cards, 2, replace=False)
+            opp_hand_rank = self._evaluator._seven(opp_hand)
+            if our_hand_rank > opp_hand_rank:
+                ehs[0] += prob_unit
+            elif our_hand_rank < opp_hand_rank:
+                ehs[1] += prob_unit
+            else:
+                ehs[2] += prob_unit
+        return ehs
 
     @staticmethod
     def get_available_cards(
