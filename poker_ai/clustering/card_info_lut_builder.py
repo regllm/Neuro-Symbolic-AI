@@ -145,7 +145,7 @@ class CardInfoLutBuilder(CardCombos):
 
                 while True:
                     processes = []
-                    curr_batch_sizes = []
+                    total_batch_size = 0
                     task_done = False
 
                     for _ in range(worker_count):
@@ -162,12 +162,12 @@ class CardInfoLutBuilder(CardCombos):
                             )
                             process.start()
                             processes.append(process)
-                            curr_batch_sizes.append(len(batch))
+                            total_batch_size += len(batch)
                         cursor += len(batch)
                 
-                    for process, curr_batch_size in zip(processes, curr_batch_sizes):
+                    for process in processes:
                         process.join()
-                        pbar.update(curr_batch_size)
+                    pbar.update(total_batch_size)
                     
                     if task_done:
                         break
