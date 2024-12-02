@@ -140,7 +140,7 @@ class CardInfoLutBuilder(CardCombos):
                         result[(start + i) * 3 + 2] = ehs[2]
                 
                 worker_count = multiprocessing.cpu_count()
-                batch_size = min(100_000, river_size // worker_count)
+                batch_size = min(10_000, river_size // worker_count)
                 cursor = 0
 
                 while True:
@@ -162,7 +162,7 @@ class CardInfoLutBuilder(CardCombos):
                             )
                             process.start()
                             processes.append(process)
-                        curr_batch_sizes.append(len(batch))
+                            curr_batch_sizes.append(len(batch))
                         cursor += len(batch)
                 
                     for process, curr_batch_size in zip(processes, curr_batch_sizes):
@@ -189,7 +189,7 @@ class CardInfoLutBuilder(CardCombos):
         #     )
         
         self.centroids["river"], self._river_clusters = self.cluster(
-            num_clusters=n_river_clusters, X=tqdm(self._river_ehs_flat_iter(), total=river_size, ascii=" >=")
+            num_clusters=n_river_clusters, X=self._river_ehs_flat_iter()
         )
         end = time.time()
         log.info(
