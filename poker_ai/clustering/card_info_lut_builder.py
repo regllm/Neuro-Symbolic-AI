@@ -142,31 +142,62 @@ class CardInfoLutBuilder(CardCombos):
                 worker_count = multiprocessing.cpu_count()
                 batch_size = min(10_000, river_size // worker_count)
                 cursor = 0
+                max_batch_seconds = None
+                batch_failed = False
 
                 while True:
-                    processes = []
-                    total_batch_size = 0
                     task_done = False
+                    
+                    if batch_failed:
+                        batches = cached_batches
+                    else:
+                        batches = []
+                        for _ in range(worker_count):
+                            batch = []
+                            for _ in range(batch_size):
+                                try:
+                                    batch.append(next(self.river))
+                                except StopIteration:
+                                    task_done = True
+                                    break
+                            if len(batch) > 0:
+                                batches.append(batch)
+                    
+                    cached_batches = batches
+                    batch_failed = False
+                    
+                    total_batch_size = 0
+                    processes = []
 
-                    for _ in range(worker_count):
-                        batch = []
-                        for _ in range(batch_size):
-                            try:
-                                batch.append(next(self.river))
-                            except StopIteration:
-                                task_done = True
-                                break
-                        if len(batch) > 0:
-                            process = multiprocessing.Process(
-                                target=process_all, args=(batch, cursor, self._river_ehs_flat)
-                            )
-                            process.start()
-                            processes.append(process)
-                            total_batch_size += len(batch)
+                    start = time.time()
+                    for batch in batches:
+                        process = multiprocessing.Process(
+                            target=process_all, args=(batch, cursor, self._river_ehs_flat)
+                        )
+                        process.start()
+                        processes.append(process)
+                        total_batch_size += len(batch)
                         cursor += len(batch)
                 
                     for process in processes:
-                        process.join()
+                        if max_batch_seconds is None:
+                            process.join()
+                            continue
+                        process.join(timeout=max_batch_seconds)
+
+                        if process.is_alive():
+                            # Failed to handle this batch.
+                            batch_failed = True
+                            cursor -= total_batch_size
+                            log.info("Reached timeout and failed to handle the batch. Now reattempting to calculate the same batch.")
+                            continue
+
+                    end = time.time()
+                    if max_batch_seconds is None:
+                        duration = end - start
+                        max_batch_seconds = int(duration * 5)
+                        log.info(f"Completed first batch of river ehs in {duration:.2f} seconds.")
+                        log.info(f"Setting batch timeout as {max_batch_seconds} seconds.")
                     pbar.update(total_batch_size)
                     
                     if task_done:
