@@ -442,7 +442,7 @@ class CardInfoLutBuilder(CardCombos):
         )
         # sample river cards and run a simulation
         turn_ehs_distribution = self.quick_simulate_get_turn_ehs_distributions(
-            available_cards, public,
+            public,
         )
         return turn_ehs_distribution
 
@@ -476,7 +476,7 @@ class CardInfoLutBuilder(CardCombos):
                 [x for x in available_cards if x != turn_card[0]]
             )
             turn_ehs_distribution = self.quick_simulate_get_turn_ehs_distributions(
-                available_cards_turn, extended_public,
+                extended_public,
             )
             for idx, turn_centroid in enumerate(self.centroids["turn"]):
                 # earth mover distance
