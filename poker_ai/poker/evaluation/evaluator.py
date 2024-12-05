@@ -40,6 +40,10 @@ class Evaluator(object):
         space using a hash table and condensing some of the calculations.
         """
         # if flush
+        print("type cards")
+        print(type(cards))
+        print("type cards[0]")
+        print(type(cards[0]))
         if cards[0] & cards[1] & cards[2] & cards[3] & cards[4] & 0xF000:
             handOR = (cards[0] | cards[1] | cards[2] | cards[3] | cards[4]) >> 16
             prime = EvaluationCard.prime_product_from_rankbits(handOR)
