@@ -135,20 +135,16 @@ class CardInfoLutBuilder(CardCombos):
         """Compute turn clusters and create lookup table."""
         log.info("Starting computation of turn clusters.")
         start = time.time()
+        ehs_sm = None
 
-        def batch_process(batch, cursor, result):
+        def batch_tasker(batch, cursor, result):
             for i, x in enumerate(batch):
-                ehs = self.process_turn_ehs_distributions(x)
-                result_pos = (cursor + i) * 3
-                result[result_pos:result_pos + 3] = ehs[0]
-                result[result_pos + 1] = ehs[1]
-                result[result_pos + 2] = ehs[2]
+                result[cursor] = self.process_turn_ehs_distributions(x)
         
-        batch_process(
+        self._turn_ehs_distributions, ehs_sm = multiprocess_ehs_calc(
             self.turn,
-            batch_process,
+            batch_tasker,
         )
-
 
         # with concurrent.futures.ProcessPoolExecutor() as executor:
         #     self._turn_ehs_distributions = list(
@@ -162,16 +158,20 @@ class CardInfoLutBuilder(CardCombos):
         #             ascii=" >=",
         #         )
         #     )
-        self._turn_ehs_distributions = []
-        for combo in tqdm(self.turn, ascii=" >="):
-            self._turn_ehs_distributions.append(
-                self.process_turn_ehs_distributions(combo)
-            )
+        # self._turn_ehs_distributions = []
+        # for combo in tqdm(self.turn, ascii=" >="):
+        #     self._turn_ehs_distributions.append(
+        #         self.process_turn_ehs_distributions(combo)
+        #     )
         self.centroids["turn"], self._turn_clusters = self.cluster(
             num_clusters=n_turn_clusters, X=self._turn_ehs_distributions
         )
         end = time.time()
         log.info(f"Finished computation of turn clusters - took {end - start} seconds.")
+
+        ehs_sm.close()
+        ehs_sm.unlink()
+
         return self.create_card_lookup(self._turn_clusters, self.turn)
 
     def _compute_flop_clusters(self, n_flop_clusters: int):
