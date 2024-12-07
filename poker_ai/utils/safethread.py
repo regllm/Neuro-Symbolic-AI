@@ -12,20 +12,21 @@ def multiprocess_ehs_calc(
     source_iter: Iterable[any],
     tasker: Callable[[Iterable[any], int, int], None],
     result_size: int = None,
+    result_width: int = 3,
 ):
     result_size = result_size or len(source_iter)
-    result_bytes = result_size * 3 * 8
+    result_bytes = result_size * result_width * 8
     result_sm = SharedMemory(
         name="result_sm", create=True, size=result_bytes
     )
     result = np.ndarray(
-        (result_size, 3), dtype=np.double, buffer=result_sm.buf
+        (result_size, result_width), dtype=np.double, buffer=result_sm.buf
     )
 
     def process_all(batch, cursor, result_size):
         sm = SharedMemory("result_sm")
         result = np.ndarray(
-            (result_size, 3), dtype=np.double, buffer=sm.buf
+            (result_size, result_width), dtype=np.double, buffer=sm.buf
         )
         tasker(batch, cursor, result)
         sm.close()
