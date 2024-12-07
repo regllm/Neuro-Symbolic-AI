@@ -430,6 +430,6 @@ class CardInfoLutBuilder(CardCombos):
         """
         log.info("Creating lookup table.")
         lossy_lookup = {}
-        for i, card_combo in enumerate(tqdm(card_combos)):
+        for i, card_combo in enumerate(tqdm(card_combos, ascii=" >=")):
             lossy_lookup[tuple(card_combo)] = clusters[i]
         return lossy_lookup
