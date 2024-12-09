@@ -78,7 +78,7 @@ class ShortDeckPokerState:
         lut_path: str = ".",
         pickle_dir: bool = False,
         load_card_lut: bool = True,
-        include_ranks: Optional[List[int]] = None,
+        include_ranks: List[int] = None,
     ):
         """Initialise state."""
         n_players = len(players)
