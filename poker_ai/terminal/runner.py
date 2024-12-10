@@ -33,7 +33,7 @@ from poker_ai.utils.algos import rotate_list
         "cluster. We recommend starting small."
     )
 )
-@click.option('--lut_path', required=True, type=str)
+@click.option('--lut_path', required=False, default=".", type=str)
 @click.option('--pickle_dir', required=False, default=False, type=bool)
 @click.option('--agent', required=False, default="offline", type=str)
 @click.option('--strategy_path', required=False, default="", type=str)

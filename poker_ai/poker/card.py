@@ -78,6 +78,15 @@ class Card:
 
     def __hash__(self):
         return hash(int(self))
+    
+    def to_pretty(self):
+        icon = self._suit_to_icon(self.suit)
+        rank = self._rank_to_pretty_str(EvaluationCard.get_rank_int(self._eval_card) + 2)
+        return f"[{icon}{rank}]"
+
+    def to_pair(self):
+        rank = self._rank_to_pretty_str(EvaluationCard.get_rank_int(self._eval_card) + 2)
+        return [self.suit, rank]
 
     @property
     def eval_card(self) -> EvaluationCard:
@@ -146,6 +155,24 @@ class Card:
             12: "queen",
             13: "king",
             14: "ace",
+        }[rank]
+    
+    def _rank_to_pretty_str(self, rank: int) -> str:
+        """Convert the integer rank to the string rank."""
+        return {
+            2: "2",
+            3: "3",
+            4: "4",
+            5: "5",
+            6: "6",
+            7: "7",
+            8: "8",
+            9: "9",
+            10: "10",
+            11: "J",
+            12: "Q",
+            13: "K",
+            14: "A",
         }[rank]
 
     def _rank_to_char(self, rank: int) -> str:
