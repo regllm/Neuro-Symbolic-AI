@@ -13,7 +13,7 @@ def player_to_str(player, name, hidden=True):
         turn_char = "*"
     chunks.append(f"[{name:^10}]{turn_char}")
     if hidden:
-        chunks.append("CARD: [--][--]")
+        chunks.append("CARD: [---][---]")
     else:
         chunks.append("CARD: " + "".join([card.to_pretty() for card in player.cards]))
     chunks.append(f"POT: {player.n_bet_chips:>6}")
@@ -51,7 +51,7 @@ def state_to_str(state, names, client_player_name):
     for player, name in zip(state.players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
-        lines.append(player_to_str(player, name, hidden=(not is_client)))
+        lines.append(player_to_str(player, name, hidden=hidden))
     return "\n".join(lines)
 
 def state_to_dict(state, names, client_player_name):
@@ -59,7 +59,7 @@ def state_to_dict(state, names, client_player_name):
     for player, name in zip(state.players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
-        players.append(player_to_dict(player, name, hidden=(not is_client)))
+        players.append(player_to_dict(player, name, hidden=hidden))
     return {
         "publics": [card.to_pair() for card in state.community_cards],
         "players": players,
@@ -77,7 +77,7 @@ def is_waiting(state, client_player_name):
 
 def get_available_actions(state):
     if state.is_terminal:
-        return ["quit", "new"]
+        return ["new"]
     else:
         return state.legal_actions
 
@@ -161,6 +161,19 @@ class PokerDemo:
         }
         self.client_player_name = self.state.players[-1].name
         self._add_event("new")
+    
+    def _reset_state(self):
+        chip_counts = [player.n_chips for player in self.state.players]
+        include_ranks = list(range(self.low_card_rank, self.high_card_rank + 1))
+        self.state = new_game(
+            self.n_players,
+            self.lut,
+            load_card_lut=False,
+            include_ranks=include_ranks,
+        )
+        for player, chip_count in zip(self.state.players, chip_counts):
+            player.n_chips = chip_count
+        self._add_event("new")
 
     def _apply_action(self, action):
         raw_player_name = self.state.current_player.name
@@ -194,7 +207,8 @@ class PokerDemo:
             if not self.is_waiting():
                 raise ValueError("Client action is not applicable now")
             elif action == "new":
-                raise NotImplementedError
+                # TODO: Save the player action history and turns.
+                self._reset_state()
             else:
                 self._apply_action(action)
 
