@@ -23,7 +23,7 @@ def multiprocess_ehs_calc(
         (result_size, result_width), dtype=np.double, buffer=result_sm.buf
     )
 
-    def process_all(batch, cursor, result_size):
+    def process_all(batch, cursor):
         sm = SharedMemory("result_sm")
         result = np.ndarray(
             (result_size, result_width), dtype=np.double, buffer=sm.buf
@@ -71,7 +71,7 @@ def multiprocess_ehs_calc(
             start = time.time()
             for batch in batches:
                 process = multiprocessing.Process(
-                    target=process_all, args=(batch, cursor, result_size)
+                    target=process_all, args=(batch, cursor)
                 )
                 process.start()
                 processes.append(process)
