@@ -1,12 +1,11 @@
-pub fn factorial(n: usize) -> usize {
-    (1..=n).product()
-}
-
 pub fn count_combinations(n: usize, r: usize) -> usize {
-    factorial(n) / (factorial(r) * factorial(n - r))
+    if r > n {
+        0
+    } else {
+        (1..=r).fold(1, |acc, val| acc * (n - val + 1) / val)
+    }
 }
 
-/// n! / (n - r)!
-pub fn count_permutations(n: usize, r: usize) -> usize {
-    factorial(n) / factorial(n - r)
+fn count_permutations(n: usize, r: usize) -> usize {
+    (n - r + 1..=n).product()
 }

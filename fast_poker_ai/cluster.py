@@ -62,6 +62,32 @@ def create_info_combos(
     return our_cards
 
 
+def simulate_river_games(
+    deck: Iterable[int],
+    combo: Iterable[int],
+):
+    pass
+
+
+def simulate_river_hand_strengths(
+    deck: Iterable[int],
+    river_combos: Iterable[Iterable[int]],
+):
+    river_combos_size = (
+        math.comb(len(deck), 2)
+        * math.comb(len(deck) - 2, 5)
+    )
+    result_width = 3
+    result = np.ndarray(
+        (river_combos_size, result_width), dtype=np.double,
+    )
+
+    for i, combo in enumerate(river_combos):
+        result[i] = simulate_river_games(deck, combo)
+    return result
+
+
+
 def create_combos(low_rank: int, high_rank: int):
     deck = create_deck(low_rank, high_rank)
     start_combos = create_card_combos(deck, 2)
