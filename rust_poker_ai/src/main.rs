@@ -1,5 +1,6 @@
-mod combo;
 mod card;
+mod cluster;
+mod combo;
 mod distance;
 mod math;
 mod shuffle;
@@ -12,6 +13,7 @@ use ndarray::array;
 
 const TURN_SIMULATION_COUNT: u16 = 6;
 const RIVER_SIMULATION_COUNT: u16 = 6;
+const RIVER_CLUSTER_COUNT: u16 = 50;
 
 
 fn main() {
@@ -62,4 +64,9 @@ fn main() {
     let river_simulate_elapsed_time = 
         river_simulate_end_time - river_simulate_start_time;
     println!("Simulated River hand strengths in {:?}.", river_simulate_elapsed_time);
+
+    cluster::kmeans(
+        &result,
+        RIVER_CLUSTER_COUNT,
+    );
 }
