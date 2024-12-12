@@ -164,7 +164,8 @@ fn build_river_lut(
 }
 
 fn build_lut() {
-    let deck = combo::create_deck(2, 4);
+    // let deck = combo::create_deck(2, 4);
+    let deck = combo::create_deck(2, 14);
     let start_combos = combo::create_card_combos(&deck, 2);
     let lookup = card::load_lookup("./assets/lookup.json");
 
