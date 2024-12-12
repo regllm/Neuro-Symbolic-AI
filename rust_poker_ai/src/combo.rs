@@ -1,7 +1,8 @@
 use crate::card;
 use crate::math;
-use std::collections::HashSet;
+use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
+use std::collections::HashSet;
 
 
 pub fn create_deck(low_rank: u8, high_rank: u8) -> Vec<i32> {
@@ -40,6 +41,10 @@ pub fn create_info_combos(
     let hand_size = start_combos[0].len() + public_count;
     let mut result_combos: Vec<Vec<i32>> = Vec::with_capacity(max_count);
 
+    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
+    let progress = ProgressBar::new(max_count as u64);
+    progress.set_style(style.clone());
+
     for start_combo in start_combos {
         let start_combo_set: HashSet<i32> = start_combo
             .clone()
@@ -63,8 +68,10 @@ pub fn create_info_combos(
                 combo.push(x);
             }
             result_combos.push(combo);
+            progress.inc(1);
         }
     }
+    progress.finish();
 
     result_combos
 }
