@@ -20,13 +20,12 @@ fn main() {
     // let result = card::new(14, 's');
     // println!("Card representation for Spade A: {}", result);
 
-    // let p = vec![0.1, 0.2, 0.3, 0.4];
-    // let q = vec![0.2, 0.3, 0.2, 0.3];
+    let p = vec![0.1, 0.2, 0.3, 0.4];
+    let q = vec![0.2, 0.3, 0.2, 0.3];
 
-    // // Calculate Wasserstein distance
-    // let distance = distance::wasserstein(&p, &q);
-
-    // println!("Wasserstein distance: {}", distance);
+    // Calculate Wasserstein distance
+    let distance = distance::wasserstein(&p, &q);
+    println!("Wasserstein distance: {}", distance);
 
     let deck = combo::create_deck(2, 4);
     
@@ -65,8 +64,8 @@ fn main() {
         river_simulate_end_time - river_simulate_start_time;
     println!("Simulated River hand strengths in {:?}.", river_simulate_elapsed_time);
 
-    cluster::kmeans(
-        &result,
-        RIVER_CLUSTER_COUNT,
-    );
+    // cluster::kmeans(
+    //     &result,
+    //     RIVER_CLUSTER_COUNT,
+    // );
 }
