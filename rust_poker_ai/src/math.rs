@@ -6,6 +6,7 @@ pub fn count_combinations(n: usize, r: usize) -> usize {
     }
 }
 
-fn count_permutations(n: usize, r: usize) -> usize {
+#[warn(dead_code)]
+pub fn count_permutations(n: usize, r: usize) -> usize {
     (n - r + 1..=n).product()
 }
