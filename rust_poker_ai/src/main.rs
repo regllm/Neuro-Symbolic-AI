@@ -21,6 +21,11 @@ const TURN_CLUSTER_COUNT: u32 = 50;
 const RIVER_CLUSTER_COUNT: u32 = 50;
 
 
+fn create_progress_style() -> ProgressStyle {
+    ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap()
+}
+
+
 fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
     let mut file = File::open(file_path).unwrap();
     let mut reader = BufReader::new(file);
@@ -31,9 +36,8 @@ fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
 
     let mut result: Vec<Vec<f64>> = Vec::with_capacity(line_count);
 
-    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(line_count as u64);
-    progress.set_style(style);
+    progress.set_style(create_progress_style());
 
     for line in reader.lines() {
         let line = line.unwrap();
@@ -50,9 +54,8 @@ fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
 }
 
 fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
-    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(combos.len() as u64);
-    progress.set_style(style);
+    progress.set_style(create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in combos.iter() {
@@ -65,9 +68,8 @@ fn save_combos(combos: &Vec<Vec<i32>>, file_path: &str) {
 }
 
 fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
-    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(centroids.len() as u64);
-    progress.set_style(style);
+    progress.set_style(create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in centroids.iter() {
@@ -80,9 +82,8 @@ fn save_centroids(centroids: &Vec<Vec<f64>>, file_path: &str) {
 }
 
 fn save_clusters(clusters: &Vec<u32>, file_path: &str) {
-    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(clusters.len() as u64);
-    progress.set_style(style);
+    progress.set_style(create_progress_style());
 
     let mut file = File::create(file_path).unwrap();
     for row in clusters.iter() {
@@ -114,14 +115,6 @@ fn build_river_lut(
     );
     elapsed_time = Instant::now() - start_time;
     println!("Simulated River hand strengths in {:?}.", elapsed_time);
-
-    // println!("River hand strengths: {:?}.", result);
-
-    for row in result.iter() {
-        if row.len() != 3 {
-            println!("There is a row with length {:?}.", row.len());
-        }
-    }
 
     println!("Clustering River combos.");
     start_time = Instant::now();
@@ -224,7 +217,7 @@ fn build_flop_lut(
     let mut elapsed_time = Instant::now() - start_time;
     println!("Created Flop combos in {:?}.", elapsed_time);
 
-    println!("Simulating Turn hand strengths.");
+    println!("Simulating Flop hand strengths.");
     start_time = Instant::now();
     let result = strength::simulate_flop_hand_strengths(
         deck,
@@ -239,7 +232,7 @@ fn build_flop_lut(
         TURN_CLUSTER_COUNT,
     );
     elapsed_time = Instant::now() - start_time;
-    println!("Simulated Turn hand strengths in {:?}.", elapsed_time);
+    println!("Simulated Flop hand strengths in {:?}.", elapsed_time);
 
     println!("Clustering Flop combos.");
     start_time = Instant::now();
