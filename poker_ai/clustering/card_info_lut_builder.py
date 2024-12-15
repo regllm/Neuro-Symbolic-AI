@@ -59,6 +59,85 @@ class CardInfoLutBuilder(CardCombos):
         except FileNotFoundError:
             self.centroids: Dict[str, Any] = {}
             self.card_info_lut: Dict[str, Any] = {}
+    
+    def load_raw_card_lookup(self, combos_path, clusters_path, line_count):
+        combos_file = open(combos_path, "r")
+        clusters_file = open(clusters_path, "r")
+
+        lossy_lookup = {}
+        with tqdm(total=line_count, ascii=" >=") as pbar:
+            while True:
+                combos_line = combos_file.readline().strip()
+                clusters_line = clusters_file.readline().strip()
+                if not combos_line or not clusters_line:
+                    break
+            
+                cluster = int(clusters_line)
+                combo = [int(x) for x in combos_line.split(",")]
+                lossy_lookup[tuple(combo)] = cluster
+                pbar.update(1)
+        
+        return lossy_lookup
+
+    def load_raw_centroids(self, centroids_path):
+        centroids = []
+        with open(centroids_path, "r") as f:
+            for line in f:
+                centroid = [float(x) for x in line.split(",")]
+            centroids.append(centroid)
+
+        return centroids
+    
+    def load_raw_dir(self, raw_dir: str):
+        log.info("Calculating pre-flop abstraction.")
+        self.card_info_lut["pre_flop"] = compute_preflop_lossless_abstraction(
+            builder=self
+        )
+        
+        raw_dir_path = Path(raw_dir)
+        deck_size = len(self._cards)
+        
+        raw_river_combos_path: Path = raw_dir_path / "river_combos.txt"
+        raw_river_clusters_path: Path = raw_dir_path / "river_clusters.txt"
+        raw_river_centroids_path: Path = raw_dir_path / "river_centroids.txt"
+        river_size = math.comb(deck_size, 2) * math.comb(deck_size - 2, 5)
+
+        log.info("Creating river lookup table.")
+        self.card_info_lut["river"] = self.load_raw_card_lookup(
+            raw_river_combos_path,
+            raw_river_clusters_path,
+            river_size,
+        )
+        self.centroids["river"] = self.load_raw_centroids(raw_river_centroids_path)
+
+        raw_turn_combos_path: Path = raw_dir_path / "turn_combos.txt"
+        raw_turn_clusters_path: Path = raw_dir_path / "turn_clusters.txt"
+        raw_turn_centroids_path: Path = raw_dir_path / "turn_centroids.txt"
+        turn_size = math.comb(deck_size, 2) * math.comb(deck_size - 2, 4)
+
+        log.info("Creating turn lookup table.")
+        self.card_info_lut["turn"] = self.load_raw_card_lookup(
+            raw_turn_combos_path,
+            raw_turn_clusters_path,
+            turn_size,
+        )
+        self.centroids["turn"] = self.load_raw_centroids(raw_turn_centroids_path)
+
+        raw_flop_combos_path: Path = raw_dir_path / "flop_combos.txt"
+        raw_flop_clusters_path: Path = raw_dir_path / "flop_clusters.txt"
+        raw_flop_centroids_path: Path = raw_dir_path / "flop_centroids.txt"
+        flop_size = math.comb(deck_size, 2) * math.comb(deck_size - 2, 3)
+
+        log.info("Creating flop lookup table.")
+        self.card_info_lut["flop"] = self.load_raw_card_lookup(
+            raw_flop_combos_path,
+            raw_flop_clusters_path,
+            flop_size,
+        )
+        self.centroids["flop"] = self.load_raw_centroids(raw_flop_centroids_path)
+
+        joblib.dump(self.card_info_lut, self.card_info_lut_path)
+        joblib.dump(self.centroids, self.centroid_path)
 
     def compute(
         self, n_river_clusters: int, n_turn_clusters: int, n_flop_clusters: int,
