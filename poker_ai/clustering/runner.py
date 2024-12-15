@@ -151,7 +151,6 @@ def cluster(
         low_card_rank,
         high_card_rank,
         save_dir,
-        raw_dir,
     )
     if raw_dir != "":
         builder.load_raw_dir(raw_dir)
