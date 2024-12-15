@@ -7,6 +7,7 @@ mod shuffle;
 mod strength;
 // mod test;
 
+use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::{Instant};
 use std::fs::{File, metadata};
@@ -16,19 +17,24 @@ use std::io::{Write, BufReader, BufRead};
 const FLOP_SIMULATION_COUNT: u32 = 6;
 const TURN_SIMULATION_COUNT: u32 = 6;
 const RIVER_SIMULATION_COUNT: u32 = 6;
-// const FLOP_CLUSTER_COUNT: u32 = 50;
-// const TURN_CLUSTER_COUNT: u32 = 50;
-// const RIVER_CLUSTER_COUNT: u32 = 50;
 const FLOP_CLUSTER_COUNT: u32 = 50;
-// const TURN_CLUSTER_COUNT: u32 = 30;
-const TURN_CLUSTER_COUNT: u32 = 3;
-const RIVER_CLUSTER_COUNT: u32 = 3;
+const TURN_CLUSTER_COUNT: u32 = 50;
+const RIVER_CLUSTER_COUNT: u32 = 50;
+const TURN_CLUSTER_COUNT_LIMIT: u32 = 3;
+const RIVER_CLUSTER_COUNT_LIMIT: u32 = 3;
 
+
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
+struct Args {
+    /// Use short deck for quick tests
+    #[arg(short, long, default_value_t = false)]
+    short: bool,
+}
 
 fn create_progress_style() -> ProgressStyle {
     ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap()
 }
-
 
 fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
     let mut file = File::open(file_path).unwrap();
@@ -129,6 +135,21 @@ fn build_river_lut(
     elapsed_time = Instant::now() - start_time;
     println!("Clustered River combos in {:?}.", elapsed_time);
 
+    let limited_centroids;
+    if RIVER_CLUSTER_COUNT > RIVER_CLUSTER_COUNT_LIMIT {
+        println!("Clustering River combos with limited cluster counts.");
+        start_time = Instant::now();
+        let (small_centroids, _small_clusters) = cluster::kmeans(
+            &result,
+            RIVER_CLUSTER_COUNT_LIMIT,
+        );
+        elapsed_time = Instant::now() - start_time;
+        println!("Clustered River combos in {:?}.", elapsed_time);
+        limited_centroids = small_centroids;
+    } else {
+        limited_centroids = centroids.clone();
+    }
+
     println!("Writing River combos.");
     start_time = Instant::now();
     save_combos(&river_combos, "./output/river_combos.txt");
@@ -140,6 +161,12 @@ fn build_river_lut(
     save_centroids(&centroids, "./output/river_centroids.txt");
     elapsed_time = Instant::now() - start_time;
     println!("Wrote River centroids in {:?}.", elapsed_time);
+
+    println!("Writing River centroids with limited cluster counts.");
+    start_time = Instant::now();
+    save_centroids(&limited_centroids, "./output/river_centroids_limited.txt");
+    elapsed_time = Instant::now() - start_time;
+    println!("Wrote River centroids in {:?}.", elapsed_time);
     
     println!("Writing River clusters.");
     start_time = Instant::now();
@@ -147,7 +174,7 @@ fn build_river_lut(
     elapsed_time = Instant::now() - start_time;
     println!("Wrote River clusters in {:?}.", elapsed_time);
 
-    (centroids, clusters)
+    (limited_centroids, clusters)
 }
 
 
@@ -172,7 +199,7 @@ fn build_turn_lut(
         river_centroids,
         RIVER_SIMULATION_COUNT,
         TURN_SIMULATION_COUNT,
-        RIVER_CLUSTER_COUNT,
+        RIVER_CLUSTER_COUNT_LIMIT,
     );
     elapsed_time = Instant::now() - start_time;
     println!("Simulated Turn hand strengths in {:?}.", elapsed_time);
@@ -186,6 +213,21 @@ fn build_turn_lut(
     elapsed_time = Instant::now() - start_time;
     println!("Clustered Turn combos in {:?}.", elapsed_time);
 
+    let limited_centroids;
+    if TURN_CLUSTER_COUNT > TURN_CLUSTER_COUNT_LIMIT {
+        println!("Clustering Turn combos with limited cluster counts.");
+        start_time = Instant::now();
+        let (small_centroids, _small_clusters) = cluster::kmeans(
+            &result,
+            TURN_CLUSTER_COUNT_LIMIT,
+        );
+        elapsed_time = Instant::now() - start_time;
+        println!("Clustered Turn combos in {:?}.", elapsed_time);
+        limited_centroids = small_centroids;
+    } else {
+        limited_centroids = centroids.clone();
+    }
+
     println!("Writing Turn combos.");
     start_time = Instant::now();
     save_combos(&turn_combos, "./output/turn_combos.txt");
@@ -197,6 +239,12 @@ fn build_turn_lut(
     save_centroids(&centroids, "./output/turn_centroids.txt");
     elapsed_time = Instant::now() - start_time;
     println!("Wrote Turn centroids in {:?}.", elapsed_time);
+
+    println!("Writing Turn centroids with limited cluster counts.");
+    start_time = Instant::now();
+    save_centroids(&limited_centroids, "./output/turn_centroids_limited.txt");
+    elapsed_time = Instant::now() - start_time;
+    println!("Wrote Turn centroids in {:?}.", elapsed_time);
     
     println!("Writing Turn clusters.");
     start_time = Instant::now();
@@ -204,7 +252,7 @@ fn build_turn_lut(
     elapsed_time = Instant::now() - start_time;
     println!("Wrote Turn clusters in {:?}.", elapsed_time);
 
-    (centroids, clusters)
+    (limited_centroids, clusters)
 }
 
 
@@ -232,8 +280,8 @@ fn build_flop_lut(
         RIVER_SIMULATION_COUNT,
         TURN_SIMULATION_COUNT,
         FLOP_SIMULATION_COUNT,
-        RIVER_CLUSTER_COUNT,
-        TURN_CLUSTER_COUNT,
+        RIVER_CLUSTER_COUNT_LIMIT,
+        TURN_CLUSTER_COUNT_LIMIT,
     );
     elapsed_time = Instant::now() - start_time;
     println!("Simulated Flop hand strengths in {:?}.", elapsed_time);
@@ -270,15 +318,18 @@ fn build_flop_lut(
 
 
 fn build_lut() {
-    // let deck = combo::create_deck(2, 4);
-    let deck = combo::create_deck(2, 14);
+    let args = Args::parse();
+
+    let min_rank = 2;
+    let max_rank = if args.short { 5 } else { 14 };
+    let deck = combo::create_deck(min_rank, max_rank);
     let start_combos = combo::create_card_combos(&deck, 2);
     let lookup = card::load_lookup("./assets/lookup.json");
 
     let (river_centroids, turn_centroids);
-    if metadata("./output/river_centroids.txt").is_ok() {
+    if metadata("./output/river_centroids_limited.txt").is_ok() {
         println!("Loading River centroids.");
-        river_centroids = load_centroids("./output/river_centroids.txt");
+        river_centroids = load_centroids("./output/river_centroids_limited.txt");
     } else {
         let (centroids, _river_clusters) = build_river_lut(
             &deck,
@@ -287,9 +338,9 @@ fn build_lut() {
         );
         river_centroids = centroids;
     }
-    if metadata("./output/turn_centroids.txt").is_ok() {
+    if metadata("./output/turn_centroids_limited.txt").is_ok() {
         println!("Loading Turn centroids.");
-        turn_centroids = load_centroids("./output/turn_centroids.txt");
+        turn_centroids = load_centroids("./output/turn_centroids_limited.txt");
     } else {
         let (centroids, _turn_clusters) = build_turn_lut(
             &deck,
