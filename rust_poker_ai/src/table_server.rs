@@ -168,6 +168,6 @@ fn start_server() {
 pub fn run_server() {
     let args = args::get_args();
 
-    load_lookup_tables(args.table_path);
+    load_lookup_tables(&args.table_path);
     start_server();
 }
