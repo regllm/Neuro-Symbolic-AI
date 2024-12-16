@@ -74,6 +74,36 @@ pub fn new(raw_rank: u8, char_suit: char) -> i32 {
     bit_rank | suit | rank | prime_rank
 }
 
+pub fn get_rank_int(card_int: i32) -> i32 {
+    (card_int >> 8) & 0xF
+}
+
+pub fn get_suit_int(card_int: i32) -> i32 {
+    (card_int >> 12) & 0xF
+}
+
+pub fn get_small_suit_int(card_int: i32) -> i32 {
+    match get_suit_int(card_int) {
+        1 => 0,
+        2 => 1,
+        4 => 2,
+        8 => 3,
+        _ => -1,
+    }
+}
+
+pub fn get_card_key(card_int: i32) -> i32 {
+    get_rank_int(card_int) * 4 + get_small_suit_int(card_int)
+}
+
+pub fn get_combo_key(card_ints: &Vec<i32>) -> u64 {
+    let mut result: u64 = 0;
+    for (i, &card_int) in card_ints.iter().enumerate() {
+        result += (get_card_key(card_int) + 1) as u64 * u64::pow(64, i as u32);
+    }
+    result
+}
+
 pub fn load_lookup(file_path: &str) -> LookupTable {
     let mut file = File::open(file_path).expect("Failed to open file");
     let mut text = String::new();
