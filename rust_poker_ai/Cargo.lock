@@ -79,8 +79,8 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "ckmeans"
-version = "0.1.4"
-source = "git+https://github.com/tanker-fund/rust-ckmeans.git?tag=v0.1.4#23dc9b862de1218568d9faaad4022fc12934c117"
+version = "0.1.3"
+source = "git+https://github.com/tanker-fund/rust-ckmeans.git?tag=v0.1.3#e71e93b078aad6623679a64d733f19725644fb06"
 dependencies = [
  "cc",
  "libc",
@@ -471,6 +471,7 @@ dependencies = [
  "lazy_static",
  "ndarray",
  "ndarray-rand",
+ "num-traits",
  "rand",
  "rand_xoshiro",
  "rayon",
