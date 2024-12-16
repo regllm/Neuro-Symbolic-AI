@@ -11,6 +11,7 @@ from scipy.stats import wasserstein_distance
 from tqdm import tqdm
 
 from poker_ai.clustering.card_combos import CardCombos
+from poker_ai.clustering.combo_lookup import ComboLookup
 from poker_ai.clustering.game_utility import GameUtility
 from poker_ai.clustering.preflop import compute_preflop_lossless_abstraction
 from poker_ai.poker.evaluation import Evaluator
@@ -64,7 +65,7 @@ class CardInfoLutBuilder(CardCombos):
         combos_file = open(combos_path, "r")
         clusters_file = open(clusters_path, "r")
 
-        lossy_lookup = {}
+        lossy_lookup = ComboLookup()
         with tqdm(total=line_count, ascii=" >=") as pbar:
             while True:
                 combos_line = combos_file.readline().strip()
@@ -74,7 +75,7 @@ class CardInfoLutBuilder(CardCombos):
             
                 cluster = int(clusters_line)
                 combo = [int(x) for x in combos_line.split(",")]
-                lossy_lookup[tuple(combo)] = cluster
+                lossy_lookup[combo] = cluster
                 pbar.update(1)
         
         return lossy_lookup
