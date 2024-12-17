@@ -5,6 +5,7 @@ import joblib
 
 from poker_ai.clustering.lookup_client import LookupClient
 from poker_ai.games.short_deck.state import new_game, ShortDeckPokerState
+from poker_ai.utils.algos import rotate_list
 
 
 def player_to_str(player, name, hidden=True):
@@ -12,6 +13,8 @@ def player_to_str(player, name, hidden=True):
     turn_char = " "
     if player.is_turn:
         turn_char = "*"
+    elif not player.is_active:
+        turn_char = "#"
     chunks.append(f"[{name:^10}]{turn_char}")
     if hidden:
         chunks.append("CARD: [---][---]")
@@ -24,7 +27,7 @@ def player_to_str(player, name, hidden=True):
     if player.is_big_blind:
         chunks.append("<BIG BLIND>")
     if player.is_dealer:
-        chunks.append("<BIG BLIND>")
+        chunks.append("<DEALER>")
     if not player.is_active:
         chunks.append("<FOLDED>")
     return " ".join(chunks)
@@ -130,6 +133,8 @@ class PokerDemo:
     ):
         # Set configurations for the game.
         self.n_players = n_players
+        self.player_rotation_key = 0
+        self.players = []
         self.names = [f"Player {i + 1}" for i in range(n_players - 1)] + ["You"]
         self.random_agent = strategy is None
         self.strategy = strategy
@@ -146,6 +151,17 @@ class PokerDemo:
 
         # Play until the player input is needed.
         self.play()
+    
+    def _rotate_players(self):
+        self.player_rotation_key -= 1
+        if self.player_rotation_key < 0:
+            self.player_rotation_key = self.n_players - 1
+        self.players = rotate_list(self.state.players[::-1], self.player_rotation_key)
+        self.player_name_dict = {
+            player.name: name
+            for player, name in zip(self.players, self.names)
+        }
+        self.client_player_name = self.players[-1].name
 
     def _add_event(self, action, raw_player_name=None):
         player_name = None
@@ -165,15 +181,11 @@ class PokerDemo:
             load_card_lut=False,
             include_ranks=include_ranks,
         )
-        self.player_name_dict = {
-            player.name: name
-            for player, name in zip(self.state.players, self.names)
-        }
-        self.client_player_name = self.state.players[-1].name
+        self._rotate_players()
         self._add_event("new")
     
     def _reset_state(self):
-        chip_counts = [player.n_chips for player in self.state.players]
+        chip_counts = [player.n_chips for player in self.players]
         include_ranks = list(range(self.low_card_rank, self.high_card_rank + 1))
         self.state = new_game(
             self.n_players,
@@ -181,7 +193,8 @@ class PokerDemo:
             load_card_lut=False,
             include_ranks=include_ranks,
         )
-        for player, chip_count in zip(self.state.players, chip_counts):
+        self._rotate_players()
+        for player, chip_count in zip(self.players, chip_counts):
             player.n_chips = chip_count
         self._add_event("new")
 
