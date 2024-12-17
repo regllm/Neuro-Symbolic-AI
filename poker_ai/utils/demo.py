@@ -3,6 +3,7 @@ import random
 import numpy as np
 import joblib
 
+from poker_ai.clustering.lookup_client import LookupClient
 from poker_ai.games.short_deck.state import new_game, ShortDeckPokerState
 
 
@@ -105,8 +106,17 @@ def load_strategy(strategy_path):
 
 
 def load_lut(lut_path: str, low_card_rank: int = 2, high_card_rank: int = 14):
-    filename = f"card_info_lut_{low_card_rank}_to_{high_card_rank}.joblib"
-    return joblib.load(lut_path + "/" + filename)
+    if lut_path.startswith("lut://"):
+        card_info_lut = LookupClient(
+            lut_path,
+            low_card_rank=low_card_rank,
+            high_card_rank=high_card_rank,
+        )
+        card_info_lut.connect()
+        return card_info_lut
+    else:
+        filename = f"card_info_lut_{low_card_rank}_to_{high_card_rank}.joblib"
+        return joblib.load(lut_path + "/" + filename)
 
 
 class PokerDemo:
