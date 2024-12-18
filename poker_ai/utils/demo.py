@@ -58,15 +58,16 @@ def state_to_str(state, players, names, client_player_name):
         lines.append(player_to_str(player, name, hidden=hidden))
     return "\n".join(lines)
 
+
 def state_to_dict(state, players, names, client_player_name):
-    players = []
+    player_dicts = []
     for player, name in zip(players, names):
         is_client = player.name == client_player_name
         hidden = not state.is_terminal and not is_client
-        players.append(player_to_dict(player, name, hidden=hidden))
+        player_dicts.append(player_to_dict(player, name, hidden=hidden))
     return {
         "publics": [card.to_pair() for card in state.community_cards],
-        "players": players,
+        "players": player_dicts,
         "pot": state._table.pot.total,
         "is_terminal": state.is_terminal,
         "is_waiting": is_waiting(state, client_player_name),
