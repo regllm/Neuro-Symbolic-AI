@@ -135,7 +135,6 @@ class PokerDemo:
         # Set configurations for the game.
         self.n_players = n_players
         self.player_rotation_key = 0
-        self.players = []
         self.names = [f"Player {i + 1}" for i in range(n_players - 1)] + ["You"]
         self.random_agent = strategy is None
         self.strategy = strategy
@@ -152,17 +151,20 @@ class PokerDemo:
 
         # Play until the player input is needed.
         self.play()
+
+    def _get_players(self):
+        return rotate_list(self.state.players[::-1], self.player_rotation_key)
     
     def _rotate_players(self):
         self.player_rotation_key -= 1
         if self.player_rotation_key < 0:
             self.player_rotation_key = self.n_players - 1
-        self.players = rotate_list(self.state.players[::-1], self.player_rotation_key)
+        players = self._get_players()
         self.player_name_dict = {
             player.name: name
-            for player, name in zip(self.players, self.names)
+            for player, name in zip(players, self.names)
         }
-        self.client_player_name = self.players[-1].name
+        self.client_player_name = players[-1].name
 
     def _add_event(self, action, raw_player_name=None):
         player_name = None
@@ -186,7 +188,7 @@ class PokerDemo:
         self._add_event("new")
     
     def _reset_state(self):
-        chip_counts = [player.n_chips for player in self.players]
+        chip_counts = [player.n_chips for player in self._get_players()]
         include_ranks = list(range(self.low_card_rank, self.high_card_rank + 1))
         self.state = new_game(
             self.n_players,
@@ -195,7 +197,7 @@ class PokerDemo:
             include_ranks=include_ranks,
         )
         self._rotate_players()
-        for player, chip_count in zip(self.players, chip_counts):
+        for player, chip_count in zip(self._get_players(), chip_counts):
             player.n_chips = chip_count
         self._add_event("new")
 
@@ -209,7 +211,7 @@ class PokerDemo:
         self._apply_action(action)
 
     def to_dict(self):
-        return state_to_dict(self.state, self.players, self.names, self.client_player_name)
+        return state_to_dict(self.state, self._get_players(), self.names, self.client_player_name)
 
     def read_events(self):
         event_dicts = []
