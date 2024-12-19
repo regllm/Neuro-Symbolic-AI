@@ -308,6 +308,7 @@ def start(
             sync_cfr=sync_cfr,
             sync_discount=sync_discount,
             sync_serialise=sync_serialise,
+            include_ranks=include_ranks,
         )
         _safe_search(server)
 
