@@ -134,16 +134,21 @@ class PokerDemo:
         high_card_rank=14,
         lut=None,
         strategy=None,
+        single_agent=True,
     ):
         # Set configurations for the game.
         self.n_players = n_players
         self.player_rotation_key = 0
-        self.names = [f"Player {i + 1}" for i in range(n_players - 1)] + ["You"]
         self.random_agent = strategy is None
         self.strategy = strategy
         self.lut = lut if lut is not None else {}
         self.low_card_rank = low_card_rank
         self.high_card_rank = high_card_rank
+        self.single_agent = single_agent
+        if single_agent:
+            self.names = [f"Player {i + 1}" for i in range(n_players - 2)] + ["Pluribus", "You"]
+        else:
+            self.names = [f"Player {i + 1}" for i in range(n_players - 1)] + ["You"]
 
         # Initialize the event log list.
         self.events = []
@@ -168,6 +173,7 @@ class PokerDemo:
             for player, name in zip(players, self.names)
         }
         self.client_player_name = players[-1].name
+        self.agent_player_name = players[-2].name
 
     def _add_event(self, action, raw_player_name=None):
         player_name = None
@@ -210,7 +216,10 @@ class PokerDemo:
         self._add_event(action, raw_player_name)
 
     def _calc_action_and_play(self):
-        action = calc_action(self.state, self.strategy)
+        if self.single_agent and self.state.current_player.name != self.agent_player_name:
+            action = calc_action(self.state, None)
+        else:    
+            action = calc_action(self.state, self.strategy)
         self._apply_action(action)
 
     def to_dict(self):
