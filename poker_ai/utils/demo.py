@@ -134,7 +134,7 @@ class PokerDemo:
         high_card_rank=14,
         lut=None,
         strategy=None,
-        single_agent=True,
+        include_dumb_players=False,
     ):
         # Set configurations for the game.
         self.n_players = n_players
@@ -144,9 +144,9 @@ class PokerDemo:
         self.lut = lut if lut is not None else {}
         self.low_card_rank = low_card_rank
         self.high_card_rank = high_card_rank
-        self.single_agent = single_agent
-        if single_agent:
-            self.names = [f"Player {i + 1}" for i in range(n_players - 2)] + ["Pluribus", "You"]
+        self.include_dumb_players = include_dumb_players
+        if include_dumb_players:
+            self.names = [f"Player {i + 1}" for i in range(n_players - 3)] + ["Agent 1", "Agent 2", "You"]
         else:
             self.names = [f"Player {i + 1}" for i in range(n_players - 1)] + ["You"]
 
@@ -173,7 +173,7 @@ class PokerDemo:
             for player, name in zip(players, self.names)
         }
         self.client_player_name = players[-1].name
-        self.agent_player_name = players[-2].name
+        self.agent_player_names = [players[-3].name, players[-2].name]
 
     def _add_event(self, action, raw_player_name=None):
         player_name = None
@@ -216,7 +216,7 @@ class PokerDemo:
         self._add_event(action, raw_player_name)
 
     def _calc_action_and_play(self):
-        if self.single_agent and self.state.current_player.name != self.agent_player_name:
+        if self.include_dumb_players and self.state.current_player.name not in self.agent_player_names:
             action = calc_action(self.state, None)
         else:    
             action = calc_action(self.state, self.strategy)
