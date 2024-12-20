@@ -10,7 +10,7 @@ use std::thread::available_parallelism;
 
 fn calc_chunk_size(total: usize) -> usize {
     let process_count = available_parallelism().unwrap().get();
-    let chunk_size = cmp::min((total as f64 / process_count as f64).ceil() as usize, 100000 as usize);
+    let chunk_size = cmp::min((total as f64 / process_count as f64).ceil() as usize, 10000 as usize);
     chunk_size
 }
 
