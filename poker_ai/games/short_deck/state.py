@@ -474,7 +474,7 @@ class ShortDeckPokerState:
         actions: List[Optional[str]] = []
         if self.current_player.is_active:
             actions += ["fold", "call"]
-            if self._n_raises < 3:
+            if self._n_raises < 4:
                 # In limit hold'em we can only bet/raise if there have been
                 # less than three raises in this round of betting, or if there
                 # are two players playing.
