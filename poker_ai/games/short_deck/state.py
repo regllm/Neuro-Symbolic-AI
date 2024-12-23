@@ -20,6 +20,7 @@ from poker_ai.poker.table import PokerTable
 
 logger = logging.getLogger("poker_ai.games.short_deck.state")
 InfoSetLookupTable = Dict[str, Dict[Tuple[int, ...], str]]
+raise_levels = [2, 3, 5, 10, 20, 40, 60, 80, 100]
 
 
 def new_game(
@@ -182,6 +183,7 @@ class ShortDeckPokerState:
         # An action has been made, so alas we are not in the first move of the
         # current betting round.
         new_state._first_move_of_current_round = False
+        raise_action = None
         if action_str is None:
             # Assert active player has folded already.
             assert (
@@ -197,9 +199,22 @@ class ShortDeckPokerState:
             if new_state._betting_stage in {"turn", "river"}:
                 bet_n_chips *= 2
             if len(action_str.split(":")) > 1:
-                custom_bet_n_chips = int(action_str.split(":")[-1])
-                if custom_bet_n_chips > bet_n_chips:
-                    bet_n_chips = custom_bet_n_chips
+                param = action_str.split(":")[-1]
+                if param.startwith("lv"):
+                    level = int(param.split("lv")[1])
+                    bet_n_chips *= level
+                    raise_action = action_str
+                else:
+                    base_bet_n_chips = bet_n_chips
+                    custom_bet_n_chips = int(param)
+                    if custom_bet_n_chips > bet_n_chips:
+                        bet_n_chips = custom_bet_n_chips
+                    approximate_level = 1
+                    for level in raise_levels:
+                        if bet_n_chips >= base_bet_n_chips * level:
+                            approximate_level = level
+                    if approximate_level > 1:
+                        raise_action = f"raise:lv{approximate_level}"
             biggest_bet = max(p.n_bet_chips for p in new_state.players)
             n_chips_to_call = biggest_bet - new_state.current_player.n_bet_chips
             raise_n_chips = bet_n_chips + n_chips_to_call
@@ -214,7 +229,10 @@ class ShortDeckPokerState:
         # Update the new state.
         skip_actions = ["skip" for _ in range(new_state._skip_counter)]
         new_state._history[new_state.betting_stage] += skip_actions
-        new_state._history[new_state.betting_stage].append(str(action))
+        if raise_action is not None:
+            new_state._history[new_state.betting_stage].append(raise_action)
+        else:
+            new_state._history[new_state.betting_stage].append(str(action))
         new_state._n_actions += 1
         new_state._skip_counter = 0
         # Player has made move, increment the player that is next.
@@ -485,4 +503,25 @@ class ShortDeckPokerState:
                 actions += ["raise"]
         else:
             actions += [None]
+        return actions
+    
+    @property
+    def legal_traverse_actions(self) -> List[Optional[str]]:
+        """Return the actions that are legal for this game state for traverse.
+        
+        Return the available actions including custom amount raises.
+        """
+        actions: List[Optional[str]] = []
+        if self.current_player.is_active:
+            actions.append("fold")
+            actions.append("call")
+            if self._n_raises < 4:
+                # In limit hold'em we can only bet/raise if there have been
+                # less than three raises in this round of betting, or if there
+                # are two players playing.
+                actions.append("raise")
+                for level in raise_levels:
+                    actions.append(f"raise:lv{level}")
+        else:
+            actions.append(None)
         return actions
