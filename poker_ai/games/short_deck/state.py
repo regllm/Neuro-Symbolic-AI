@@ -200,7 +200,7 @@ class ShortDeckPokerState:
                 bet_n_chips *= 2
             if len(action_str.split(":")) > 1:
                 param = action_str.split(":")[-1]
-                if param.startwith("lv"):
+                if param.startswith("lv"):
                     level = int(param.split("lv")[1])
                     bet_n_chips *= level
                     raise_action = action_str
