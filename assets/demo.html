@@ -153,7 +153,7 @@
       try {
         let action = rawAction;
         if (action === "raise") {
-          const amount = prompt("How much do you want to raise? Leave blank for minimum amount.");
+          const amount = prompt("Raise how much? (Leave blank: minimum amount)");
           if (amount.trim()) {
             action = `raise:${amount}`;
           }
