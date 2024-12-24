@@ -5,6 +5,7 @@ use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
 use rayon::prelude::*;
 use std::cmp;
+use std::mem::drop;
 use std::thread::available_parallelism;
 
 
@@ -100,8 +101,6 @@ fn simulate_turn_ehs_distributions(
         .collect();
     let available_cards_count = available_cards.len();
     
-    // let prob_unit = 1.0 / f64::from(river_simulation_count);
-    // let sub_prob_unit = 1.0 / f64::from(turn_simulation_count);
     let mut ehs: Vec<u8> = vec![0, 0, 0];
 
     let mut base_combo: Vec<i32> = turn_combo.to_vec();
@@ -215,6 +214,10 @@ pub fn simulate_turn_hand_strengths(
                     result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
                 }
             }
+            for combo in chunk_clone {
+                drop(combo);
+            }
+            drop(chunk_result);
         }
         // result.extend(chunk_result);
         progress.inc(curr_chunk_size);
