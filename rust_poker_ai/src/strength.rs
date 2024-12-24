@@ -6,6 +6,7 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use std::cmp;
 use std::mem::drop;
+use std::sync::{Arc, Mutex};
 use std::thread::available_parallelism;
 
 
@@ -90,12 +91,13 @@ pub fn simulate_river_hand_strengths(
 fn simulate_turn_ehs_distributions(
     deck: &Vec<i32>,
     turn_combo: &Vec<i32>,
+    result: &mut Vec<u8>,
     lookup: &card::LookupTable,
     river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
     turn_simulation_count: u32,
     river_cluster_count: u32,
-) -> Vec<u8> {
+) {
     let available_cards: Vec<&i32> = deck.iter()
         .filter(|&x| !turn_combo.contains(x))
         .collect();
@@ -107,10 +109,10 @@ fn simulate_turn_ehs_distributions(
     base_combo.push(0);
     let mut another_combo: Vec<i32> = base_combo.to_vec();
 
-    let mut result: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
-    for _i in 0..river_cluster_count {
-        result.push(0);
-    }
+    // let mut result: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
+    // for _i in 0..river_cluster_count {
+    //     result.push(0);
+    // }
 
     // Sample river cards and run simulations.
     let mut rng = rand::thread_rng();
@@ -156,7 +158,7 @@ fn simulate_turn_ehs_distributions(
         result[min_centroid_index] += 1;
     }
 
-    result
+    // result
 }
 
 pub fn simulate_turn_hand_strengths(
@@ -169,20 +171,16 @@ pub fn simulate_turn_hand_strengths(
     river_cluster_count: u32,
 ) -> Vec<Vec<u8>> {
     let turn_combos_size = turn_combos.len();
-    // let result_width = river_cluster_count;
 
-    // println!("Init results");
-    let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
+    // Initialize the result vector.
+    let mut shared_result: Arc<Mutex<Vec<Vec<u8>>>> = Arc::new(Mutex::new(Vec::with_capacity(turn_combos_size)));
     for i in 0..turn_combos_size {
         let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
         for _j in 0..river_cluster_count {
             row.push(0u8);
         }
-        result.push(row);
+        shared_result.lock().unwrap().push(row);
     }
-    // println!("Done init results");
-
-    // result = Vec::with_capacity(turn_combos_size as usize);
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
     let progress = ProgressBar::new(turn_combos_size as u64);
@@ -195,29 +193,33 @@ pub fn simulate_turn_hand_strengths(
         { 
             // This is a scope for handling a single chunk.
             let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-            let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
-                .map(|turn_combo| {
+            curr_chunk_size = chunk_clone.len() as u64;
+            let chunk_row = chunk_size * chunk_cursor;
+
+            chunk_clone.par_iter()
+                .enumerate()
+                .for_each(|(i, turn_combo)| {
                     simulate_turn_ehs_distributions(
                         deck,
                         &turn_combo,
+                        &mut shared_result.lock().unwrap()[chunk_row + i],
                         lookup,
                         river_centroids,
                         river_simulation_count,
                         turn_simulation_count,
                         river_cluster_count,
-                    )
-                })
-                .collect();
-            curr_chunk_size = chunk_result.len() as u64;
-            for i in 0..chunk_result.len() {
-                for j in 0..(river_cluster_count as usize) {
-                    result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
-                }
-            }
+                    );
+                });
+            
+            // for i in 0..chunk_result.len() {
+            //     for j in 0..(river_cluster_count as usize) {
+            //         result[chunk_size * chunk_cursor + i][j] = chunk_result[i][j];
+            //     }
+            // }
             for combo in chunk_clone {
                 drop(combo);
             }
-            drop(chunk_result);
+            // drop(chunk_result);
         }
         // result.extend(chunk_result);
         progress.inc(curr_chunk_size);
@@ -225,6 +227,14 @@ pub fn simulate_turn_hand_strengths(
     }
     progress.finish();
 
+    // Clone result values row by row to get pure result vectors.
+    let raw_result = shared_result.lock().unwrap();
+    let result_vector: &Vec<Vec<u8>> = &*raw_result;
+
+    let mut result: Vec<Vec<u8>> = Vec::new();
+    for row in result_vector {
+        result.push(row.clone());
+    }
     result
 }
 
@@ -261,9 +271,14 @@ fn simulate_flop_potential_aware_distributions(
         let r = shuffle::get_random_index(&mut rng, available_cards_count);
         augmented_turn_combo[5] = *available_cards[r];
 
-        let turn_ehs_distribution = simulate_turn_ehs_distributions(
+        let mut turn_ehs_distribution: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
+        for _i in 0..river_cluster_count {
+            turn_ehs_distribution.push(0);
+        }
+        simulate_turn_ehs_distributions(
             deck,
             &augmented_turn_combo,
+            &mut turn_ehs_distribution,
             lookup,
             river_centroids,
             river_simulation_count,
