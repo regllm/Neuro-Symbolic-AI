@@ -91,7 +91,7 @@ pub fn simulate_river_hand_strengths(
 fn simulate_turn_ehs_distributions(
     deck: &Vec<i32>,
     turn_combo: &Vec<i32>,
-    result: &mut Vec<u8>,
+    result: *const u8,
     lookup: &card::LookupTable,
     river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
@@ -155,7 +155,10 @@ fn simulate_turn_ehs_distributions(
             }
         }
         // now increment the cluster to which it belongs -
-        result[min_centroid_index] += 1;
+        // result[min_centroid_index] += 1;
+        unsafe {
+            *result.offset(min_centroid_index) += 1;
+        }
     }
 
     // result
@@ -173,13 +176,15 @@ pub fn simulate_turn_hand_strengths(
     let turn_combos_size = turn_combos.len();
 
     // Initialize the result vector.
-    let mut shared_result: Arc<Mutex<Vec<Vec<u8>>>> = Arc::new(Mutex::new(Vec::with_capacity(turn_combos_size)));
+    let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size));
+    // let mut shared_result: Arc<Mutex<Vec<Vec<u8>>>> = Arc::new(Mutex::new(Vec::with_capacity(turn_combos_size)));
     for i in 0..turn_combos_size {
         let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
         for _j in 0..river_cluster_count {
             row.push(0u8);
         }
-        shared_result.lock().unwrap().push(row);
+        result.push(row);
+        // shared_result.lock().unwrap().push(row);
     }
 
     let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
@@ -202,7 +207,7 @@ pub fn simulate_turn_hand_strengths(
                     simulate_turn_ehs_distributions(
                         deck,
                         &turn_combo,
-                        &mut shared_result.lock().unwrap()[chunk_row + i],
+                        result[chunk_row + 1].as_ptr(),
                         lookup,
                         river_centroids,
                         river_simulation_count,
@@ -228,13 +233,13 @@ pub fn simulate_turn_hand_strengths(
     progress.finish();
 
     // Clone result values row by row to get pure result vectors.
-    let raw_result = shared_result.lock().unwrap();
-    let result_vector: &Vec<Vec<u8>> = &*raw_result;
+    // let raw_result = shared_result.lock().unwrap();
+    // let result_vector: &Vec<Vec<u8>> = &*raw_result;
 
-    let mut result: Vec<Vec<u8>> = Vec::new();
-    for row in result_vector {
-        result.push(row.clone());
-    }
+    // let mut result: Vec<Vec<u8>> = Vec::new();
+    // for row in result_vector {
+    //     result.push(row.clone());
+    // }
     result
 }
 
@@ -278,7 +283,7 @@ fn simulate_flop_potential_aware_distributions(
         simulate_turn_ehs_distributions(
             deck,
             &augmented_turn_combo,
-            &mut turn_ehs_distribution,
+            turn_ehs_distribution.as_ptr(),
             lookup,
             river_centroids,
             river_simulation_count,
