@@ -157,7 +157,8 @@ fn simulate_turn_ehs_distributions(
         // now increment the cluster to which it belongs -
         // result[min_centroid_index] += 1;
         unsafe {
-            *result.offset(min_centroid_index) += 1;
+            let mut_result: *mut u8 = result as *mut u8;
+            *mut_result.offset(min_centroid_index.try_into().unwrap()) += 1;
         }
     }
 
@@ -176,7 +177,7 @@ pub fn simulate_turn_hand_strengths(
     let turn_combos_size = turn_combos.len();
 
     // Initialize the result vector.
-    let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size));
+    let mut result: Vec<Vec<u8>> = Vec::with_capacity(turn_combos_size);
     // let mut shared_result: Arc<Mutex<Vec<Vec<u8>>>> = Arc::new(Mutex::new(Vec::with_capacity(turn_combos_size)));
     for i in 0..turn_combos_size {
         let mut row: Vec<u8> = Vec::with_capacity(river_cluster_count as usize);
