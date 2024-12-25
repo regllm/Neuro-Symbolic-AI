@@ -1,5 +1,6 @@
 use crate::card;
 use crate::distance;
+use crate::progress;
 use crate::shuffle;
 use indicatif::{ProgressBar, ProgressStyle};
 use itertools::Itertools;
@@ -188,9 +189,7 @@ pub fn simulate_turn_hand_strengths(
         // shared_result.lock().unwrap().push(row);
     }
 
-    let style = ProgressStyle::default_bar().template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta} left)").unwrap();
-    let progress = ProgressBar::new(turn_combos_size as u64);
-    progress.set_style(style);
+    let progress = progress::new(turn_combos_size as u64);
 
     let chunk_size = calc_chunk_size(turn_combos_size);
     let mut chunk_cursor: usize = 0;
@@ -198,11 +197,12 @@ pub fn simulate_turn_hand_strengths(
         let mut curr_chunk_size: u64;
         { 
             // This is a scope for handling a single chunk.
-            let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+            // let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
             curr_chunk_size = chunk_clone.len() as u64;
             let chunk_row = chunk_size * chunk_cursor;
 
-            chunk_clone.par_iter()
+            // chunk_clone.par_iter()
+            chunk.iter()
                 .enumerate()
                 .for_each(|(i, turn_combo)| {
                     simulate_turn_ehs_distributions(
