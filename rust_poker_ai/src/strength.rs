@@ -204,16 +204,16 @@ pub fn simulate_turn_hand_strengths(
             chunk_clone.par_iter()
                 .enumerate()
                 .for_each(|(i, turn_combo)| {
-                    simulate_turn_ehs_distributions(
-                        deck,
-                        &turn_combo,
-                        result[chunk_row + i].as_ptr(),
-                        lookup,
-                        river_centroids,
-                        river_simulation_count,
-                        turn_simulation_count,
-                        river_cluster_count,
-                    );
+                    // simulate_turn_ehs_distributions(
+                    //     deck,
+                    //     &turn_combo,
+                    //     result[chunk_row + i].as_ptr(),
+                    //     lookup,
+                    //     river_centroids,
+                    //     river_simulation_count,
+                    //     turn_simulation_count,
+                    //     river_cluster_count,
+                    // );
                 });
             
             // for i in 0..chunk_result.len() {
@@ -294,7 +294,7 @@ fn simulate_flop_potential_aware_distributions(
         let mut min_centroid_index: usize = 0;
         let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
-            // let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
+            let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
             let dist = 0.5;
             if min_dist < 0.0 {
                 min_dist = dist;
