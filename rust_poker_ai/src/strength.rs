@@ -198,7 +198,7 @@ pub fn simulate_turn_hand_strengths(
         { 
             // This is a scope for handling a single chunk.
             let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
-            curr_chunk_size = chunk_clone.len();
+            curr_chunk_size = chunk_clone.len() as u64;
             let chunk_row = chunk_size * chunk_cursor;
 
             chunk_clone.par_iter()
