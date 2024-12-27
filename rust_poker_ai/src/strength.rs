@@ -7,7 +7,6 @@ use itertools::Itertools;
 use rayon::prelude::*;
 use std::cmp;
 use std::mem::drop;
-use std::sync::{Arc, Mutex};
 use std::thread::available_parallelism;
 
 
@@ -194,7 +193,6 @@ pub fn simulate_turn_hand_strengths(
     let progress = progress::new(turn_combos_size as u64);
 
     let chunk_size = calc_chunk_size(turn_combos_size);
-    let mut chunk_cursor: usize = 0;
     for chunk in &turn_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
         let curr_chunk_size = chunk_clone.len() as u64;
@@ -211,7 +209,7 @@ pub fn simulate_turn_hand_strengths(
                     river_cluster_count,
                 )
             })
-            .collect();;
+            .collect();
         
         for combo in chunk_clone {
             drop(combo);
@@ -219,7 +217,6 @@ pub fn simulate_turn_hand_strengths(
         result.extend(chunk_result);
         
         progress.inc(curr_chunk_size);
-        chunk_cursor += 1;
     }
     progress.finish();
 
