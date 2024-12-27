@@ -146,8 +146,10 @@ fn simulate_turn_ehs_distributions(
         let mut min_centroid_index: usize = 0;
         let mut min_dist: f64 = -1.0;
         for (i, river_centroid) in river_centroids.iter().enumerate() {
-            // let dist = distance::wasserstein(&ehs, &river_centroid);
-            let dist = 0.5;
+            let ehs_f64: Vec<f64> = ehs.iter().map(|&x| x as f64).collect();
+            let dist = distance::wasserstein(&ehs_f64, &river_centroid);
+            drop(ehs_f64);
+            // let dist = 0.5;
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
@@ -282,7 +284,9 @@ fn simulate_flop_potential_aware_distributions(
         let mut min_centroid_index: usize = 0;
         let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
-            let dist = distance::wasserstein(&turn_ehs_distribution, &turn_centroid);
+            let ted_f64: Vec<f64> = turn_ehs_distribution.iter().map(|&x| x as f64).collect();
+            let dist = distance::wasserstein(&ted_f64, &turn_centroid);
+            drop(ted_f64);
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
