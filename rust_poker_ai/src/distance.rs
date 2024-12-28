@@ -16,7 +16,7 @@ pub fn wasserstein(v1: &Vec<f32>, v2: &Vec<f64>) -> f32 {
 
     let v2_f32: Vec<f32> = v2.iter().map(|&x| x as f32).collect();
 
-    let distance = distance(&v1, &v2_f32) as f32
+    let distance = distance(&v1, &v2_f32) as f32;
 
     drop(v2_f32);
 
