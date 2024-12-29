@@ -38,3 +38,15 @@ pub fn wasserstein(v1: &Vec<f32>, v2: &Vec<f64>) -> f32 {
 
     result
 }
+
+pub fn euclidean(v1: &Vec<f32>, v2: &Vec<f64>) -> f32 {
+    assert_eq!(v1.len(), v2.len(), "Input vectors must have the same length");
+
+    let mut sum = 0.0;
+    for (a, b) in v1.iter().zip(v2.iter()) {
+        let diff = f64::from(*a) - b;
+        sum += diff.powi(2);
+    }
+
+    sum.sqrt() as f32
+}
