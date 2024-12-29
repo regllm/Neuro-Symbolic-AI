@@ -16,13 +16,25 @@ pub fn wasserstein(v1: &Vec<f32>, v2: &Vec<f64>) -> f32 {
 
     let v2_f32: Vec<f32> = v2.iter().map(|&x| x as f32).collect();
 
-    let distance = distance(&v1, &v2_f32) as f32;
+    // let distance = distance(&v1, &v2_f32) as f32;
 
-    if (distance < 0.0) {
-        println!("distance failed: {:?}, {:?}", v1, v2_f32);
+    // if (distance < 0.0) {
+    //     println!("distance failed: {:?}, {:?}", v1, v2_f32);
+    // }
+
+    let mut result: f32;
+    let mut count = 0;
+
+    loop {
+        result = distance(&v1, &v2_f32) as f32;
+        if result >= 0.0 {
+            break;
+        }
+        count += 1;
+        println!("distance failed {:?}: {:?}, {:?}", count, v1, v2_f32);
     }
 
     drop(v2_f32);
 
-    distance
+    result
 }
