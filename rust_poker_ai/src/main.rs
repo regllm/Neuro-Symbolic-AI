@@ -27,11 +27,11 @@ use std::io::{Write, BufReader, BufRead};
 const FLOP_SIMULATION_COUNT: u32 = 12;
 const TURN_SIMULATION_COUNT: u32 = 12;
 const RIVER_SIMULATION_COUNT: u32 = 12;
-const FLOP_CLUSTER_COUNT: u32 = 24;
-const TURN_CLUSTER_COUNT: u32 = 24;
-const RIVER_CLUSTER_COUNT: u32 = 24;
-const TURN_CLUSTER_COUNT_LIMIT: u32 = 24;
-const RIVER_CLUSTER_COUNT_LIMIT: u32 = 24;
+const FLOP_CLUSTER_COUNT: u32 = 50;
+const TURN_CLUSTER_COUNT: u32 = 50;
+const RIVER_CLUSTER_COUNT: u32 = 50;
+const TURN_CLUSTER_COUNT_LIMIT: u32 = 50;
+const RIVER_CLUSTER_COUNT_LIMIT: u32 = 50;
 
 
 fn load_centroids(file_path: &str) -> Vec<Vec<f64>> {
