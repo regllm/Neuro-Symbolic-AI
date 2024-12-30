@@ -1,35 +1,61 @@
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 
+#[derive(Debug, Parser)]
+#[clap(version, about, long_about = None)]
+pub struct App {
+    #[clap(subcommand)]
+    pub command: Command,
+}
 
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-pub struct Args {
-    /// Run experiments
-    #[arg(long, default_value_t = false)]
-    pub exp: bool,
+#[derive(Debug, Subcommand)]
+pub enum Command {
+    Cluster(ClusterArgs),
+    Table(TableArgs),
+    Exp,
+}
 
-    /// Use short deck for quick tests
+#[derive(Debug, Args)]
+pub struct ClusterArgs {
+    /// Whether to cluster hands out of the short deck with only 10, J, Q, K, A
     #[arg(long, default_value_t = false)]
     pub short: bool,
+}
 
-    /// Run in a table-server mode
-    #[arg(long, default_value_t = false)]
-    pub table: bool,
-
-    /// Run in a table-server mode
+#[derive(Debug, Args)]
+pub struct TableArgs {
+    /// A path to load lookup table text files from.
     #[arg(long, default_value_t = String::from("./output"))]
-    pub table_path: String,
+    pub input: String,
 
-    /// Run in a table-server mode
+    /// A hostname to serve the lookup table server at.
     #[arg(long, default_value_t = String::from("127.0.0.1"))]
     pub host: String,
 
-    /// Run in a table-server mode
+    /// A port number to serve the lookup table server at.
     #[arg(long, default_value_t = String::from("8989"))]
     pub port: String,
 }
 
+pub fn get_app() -> App {
+    App::parse()
+}
 
-pub fn get_args() -> Args {
-    Args::parse()
+pub fn get_command() -> Command {
+    get_app().command
+}
+
+pub fn get_cluster_args() -> Option<ClusterArgs> {
+    if let Command::Cluster(sub_args) = get_command() {
+        Some(sub_args)
+    } else {
+        None
+    }
+}
+
+pub fn get_table_args() -> Option<TableArgs> {
+    if let Command::Table(sub_args) = get_command() {
+        Some(sub_args)
+    } else {
+        None
+    }
 }
