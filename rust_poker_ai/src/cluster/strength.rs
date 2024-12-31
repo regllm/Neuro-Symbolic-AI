@@ -1,4 +1,4 @@
-use crate::cluster::{util, shuffle};
+use crate::cluster::{distance, util, shuffle};
 use crate::poker::card;
 use crate::progress;
 
@@ -92,6 +92,7 @@ fn simulate_turn_ehs_distributions(
     deck: &Vec<i32>,
     turn_combo: &Vec<i32>,
     lookup: &card::LookupTable,
+    emd_calc: &mut distance::EmdCalculator,
     river_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
     turn_simulation_count: u32,
@@ -146,7 +147,7 @@ fn simulate_turn_ehs_distributions(
         let mut min_dist: f64 = -1.0;
         for (i, river_centroid) in river_centroids.iter().enumerate() {
             let ehs_f64: Vec<f64> = ehs.iter().map(|&x| x as f64).collect();
-            let dist = util::wasserstein(&ehs_f64, &river_centroid);
+            let dist = emd_calc.calc(&ehs_f64, &river_centroid).expect("EMD calculation failed");
             // let dist = 0.5;
             if min_dist < 0.0 {
                 min_dist = dist;
@@ -197,17 +198,21 @@ pub fn simulate_turn_hand_strengths(
         let curr_chunk_size = chunk_clone.len() as u64;
 
         let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
-            .map(|turn_combo| {
-                simulate_turn_ehs_distributions(
-                    deck,
-                    &turn_combo,
-                    lookup,
-                    river_centroids,
-                    river_simulation_count,
-                    turn_simulation_count,
-                    river_cluster_count,
-                )
-            })
+            .map_init(
+                || distance::EmdCalculator::new(),
+                |emd_calc, turn_combo| {
+                    simulate_turn_ehs_distributions(
+                        deck,
+                        &turn_combo,
+                        lookup,
+                        emd_calc,
+                        river_centroids,
+                        river_simulation_count,
+                        turn_simulation_count,
+                        river_cluster_count,
+                    )
+                },
+            )
             .collect();
         
         for combo in chunk_clone {
@@ -234,6 +239,7 @@ fn simulate_flop_potential_aware_distributions(
     deck: &Vec<i32>,
     flop_combo: &Vec<i32>,
     lookup: &card::LookupTable,
+    emd_calc: &mut distance::EmdCalculator,
     river_centroids: &Vec<Vec<f64>>,
     turn_centroids: &Vec<Vec<f64>>,
     river_simulation_count: u32,
@@ -271,6 +277,7 @@ fn simulate_flop_potential_aware_distributions(
             deck,
             &augmented_turn_combo,
             lookup,
+            emd_calc,
             river_centroids,
             river_simulation_count,
             turn_simulation_count,
@@ -281,7 +288,7 @@ fn simulate_flop_potential_aware_distributions(
         let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
             let ted_f64: Vec<f64> = turn_ehs_distribution.iter().map(|&x| x as f64).collect();
-            let dist = util::wasserstein(&ted_f64, &turn_centroid);
+            let dist = emd_calc.calc(&ted_f64, &turn_centroid).expect("EMD calculation failed");
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
@@ -319,21 +326,26 @@ pub fn simulate_flop_hand_strengths(
     let chunk_size = calc_chunk_size(flop_combos_size);
     for chunk in &flop_combos.into_iter().chunks(chunk_size) {
         let chunk_clone: Vec<Vec<i32>> = chunk.cloned().collect();
+
         let chunk_result: Vec<Vec<u8>> = chunk_clone.par_iter()
-            .map(|flop_combo| {
-                simulate_flop_potential_aware_distributions(
-                    deck,
-                    &flop_combo,
-                    lookup,
-                    river_centroids,
-                    turn_centroids,
-                    river_simulation_count,
-                    turn_simulation_count,
-                    flop_simulation_count,
-                    river_cluster_count,
-                    turn_cluster_count,
-                )
-            })
+            .map_init(
+                || distance::EmdCalculator::new(),
+                |emd_calc, flop_combo| {
+                    simulate_flop_potential_aware_distributions(
+                        deck,
+                        &flop_combo,
+                        lookup,
+                        emd_calc,
+                        river_centroids,
+                        turn_centroids,
+                        river_simulation_count,
+                        turn_simulation_count,
+                        flop_simulation_count,
+                        river_cluster_count,
+                        turn_cluster_count,
+                    )
+                },
+            )
             .collect();
         let chunk_size = chunk_result.len() as u64;
         result.extend(chunk_result);
