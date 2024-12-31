@@ -281,7 +281,7 @@ fn simulate_flop_potential_aware_distributions(
         let mut min_dist: f64 = -1.0;
         for (j, turn_centroid) in turn_centroids.iter().enumerate() {
             let ted_f64: Vec<f64> = turn_ehs_distribution.iter().map(|&x| x as f64).collect();
-            let dist = util::euclidean(&ted_f64, &turn_centroid);
+            let dist = util::wasserstein(&ted_f64, &turn_centroid);
             if min_dist < 0.0 {
                 min_dist = dist;
             } else if dist < min_dist {
