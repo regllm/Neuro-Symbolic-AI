@@ -210,6 +210,7 @@ class PokerDemo:
         for player, chip_count in zip(self._get_players(), chip_counts):
             missing_chip_count = self.state._initial_n_chips - player.n_chips
             player.n_chips = chip_count - missing_chip_count
+        self.state.flag_broke_players()
         self.state.assign_blinds()
         self.state.skip_players_with_no_chips()
         self._add_event("new")
