@@ -514,7 +514,7 @@ class ShortDeckPokerState:
             actions += ["fold", "call"]
             if self._n_raises < 4:
                 # In limit hold'em we can only bet/raise if there have been
-                # less than three raises in this round of betting, or if there
+                # less than four raises in this round of betting, or if there
                 # are two players playing.
                 actions += ["raise"]
         else:
