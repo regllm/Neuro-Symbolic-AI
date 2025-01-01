@@ -41,11 +41,16 @@ class PokerEngine:
         self.compute_winners()
         self._round_cleanup()
 
-    def round_setup(self):
+    def round_setup(self, without_blinds=False):
         """Code that must be done to setup the round before the game starts."""
         self.table.pot.reset()
         self._assign_order_to_players()
-        self._assign_blinds()
+        if not without_blinds:
+            self._assign_blinds()
+        
+
+    def assign_blinds(self):
+        return self._assign_blinds()
 
     def _all_dealing_and_betting_rounds(self):
         """Run through dealing of all cards and all rounds of betting."""
@@ -144,9 +149,28 @@ class PokerEngine:
 
     def _assign_blinds(self):
         """Assign the blinds to the players."""
-        self.table.players[0].add_to_pot(self.small_blind)
-        self.table.players[1].add_to_pot(self.big_blind)
-        logger.debug(f"Assigned blinds to players {self.table.players[:2]}")
+        small_blind_player = None
+        big_blind_player = None
+        for player in self.table.players:
+            if small_blind_player is None:
+                if player.n_chips < self.small_blind:
+                    continue
+                small_blind_player = player
+                player.add_to_pot(self.small_blind)
+                player.is_small_blind = True
+            elif big_blind_player is None:
+                if player.n_chips < self.big_blind:
+                    continue
+                big_blind_player = player
+                player.add_to_pot(self.big_blind)
+                player.is_big_blind = True
+                break
+        # self.table.players[0].add_to_pot(self.small_blind)
+        # self.table.players[1].add_to_pot(self.big_blind)
+        blind_players = [small_blind_player, big_blind_player]
+        logger.debug(f"Assigned blinds to players {blind_players}")
+
+        return blind_players
 
     def _move_blinds(self):
         """Rotate the table's player list.

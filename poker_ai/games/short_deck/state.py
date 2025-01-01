@@ -80,6 +80,7 @@ class ShortDeckPokerState:
         load_card_lut: bool = True,
         include_ranks: List[int] = None,
         card_info_lut: Optional[Dict[str, Any]] = None,
+        without_blinds: bool = False,
     ):
         """Initialise state."""
         n_players = len(players)
@@ -116,7 +117,7 @@ class ShortDeckPokerState:
         )
         # Reset the pot, assign betting order to players (might need to remove
         # this), assign blinds to the players.
-        self._poker_engine.round_setup()
+        self._poker_engine.round_setup(without_blinds=True)
         # Deal private cards to players.
         self._table.dealer.deal_private_cards(self._table.players)
         # Store the actions as they come in here.
@@ -132,8 +133,8 @@ class ShortDeckPokerState:
         # Rotate the big and small blind to the final positions for the pre
         # flop round only.
         player_i_order: List[int] = [p_i for p_i in range(n_players)]
-        self.players[0].is_small_blind = True
-        self.players[1].is_big_blind = True
+        if not without_blinds:
+            self.assign_blinds()
         self.players[-1].is_dealer = True
         self._player_i_lut: Dict[str, List[int]] = {
             "pre_flop": player_i_order[2:] + player_i_order[:2],
@@ -149,6 +150,17 @@ class ShortDeckPokerState:
         for player in self.players:
             player.is_turn = False
         self.current_player.is_turn = True
+    
+    def assign_blinds(self):
+        blind_players = self._poker_engine.assign_blinds()
+        blind_players[0].is_small_blind = True
+        blind_players[1].is_big_blind = True
+
+    def skip_players_with_no_chips(self):
+        while self.current_player.n_chips == 0:
+            self.current_player.is_active = False
+            self._skip_counter += 1
+            self._move_to_next_player()
 
     def __repr__(self):
         """Return a helpful description of object in strings and debugger."""
@@ -251,6 +263,10 @@ class ShortDeckPokerState:
             if not new_state.current_player.is_active:
                 new_state._skip_counter += 1
                 assert not new_state.current_player.is_active
+            elif new_state.current_player.n_chips == 0:
+                # Auto-fold player with no chips.
+                new_state.current_player.is_active = False
+                new_state._skip_counter += 1
             elif new_state.current_player.is_active:
                 if new_state._poker_engine.n_players_with_moves == 1:
                     # No players left.
