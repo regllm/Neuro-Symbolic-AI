@@ -32,7 +32,7 @@ class Server:
         dump_iteration: int,
         update_threshold: int,
         save_path: Union[str, Path],
-        include_ranks: List[int],
+        include_ranks: List[int] = list(range(2, 15)),
         lut_path: Union[str, Path] = ".",
         pickle_dir: bool = False,
         agent_path: Optional[Union[str, Path]] = None,
